@@ -43,6 +43,8 @@ int main( int argc, char ** argv )
 	event.button_info.button = BUTTON_LEFT;
 	sendEvent( &con, pEvent );
 
+	sleep( 1 );
+
 	//move down and to the right 100
 	event.event_t = EVENT_TYPE_MOUSE_MOVE;
 	event.move_info.dx = 1;
