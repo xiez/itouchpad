@@ -29,6 +29,8 @@
 
 #import "itouchpadfunctions.h"
 #import "NetworkController.h"
+#import "mouseevent.h"
+#import "mconnection.h"
 
 
 void init()
@@ -37,7 +39,9 @@ void init()
 	server[0] = '\0';
 }
 
-bool m_hasConnected;
+static bool m_hasConnected;
+static MConnection con;
+static pMConnection pCon = &con;
 
 bool hasConnected()
 {
@@ -168,22 +172,38 @@ int init_server()
 //	if ( !resolveHostname( (char *)server ) )
 //		return false; //DNS failed :(
 
+	if ( init_connection( pCon, server, port ) < 0 )
+	{
+		m_hasConnected = false;
+		return false;
+	}
 
 	m_hasConnected = true;
 	return true;//it worked!!! \o/
 }
 
-
-void sendGesture( int dx, int dy )
+void sendMouseMove( int dx, int dy )
 {
-	if ( m_hasConnected )
-	{
-		//TODO: add code that sends the movement to the server
+	MouseEvent e;
+	e.event_t = EVENT_TYPE_MOUSE_MOVE;
+	e.move_info.dx = dx;
+	e.move_info.dy = dy;
 
-
-	}
+	sendEvent( pCon, &e );
 
 }
+
+void sendButtonPress( bool down )
+{
+	MouseEvent e;
+	e.event_t = down? EVENT_TYPE_MOUSE_DOWN : EVENT_TYPE_MOUSE_UP;
+	e.button_info.button = BUTTON_LEFT;//only button we're using for now
+
+	sendEvent( pCon, &e );
+
+}
+
+
 
 
 
