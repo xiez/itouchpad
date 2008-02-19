@@ -6,7 +6,8 @@ APPNAME = itp-server
 
 CC=gcc
 LD=$(CC)
-CFLAGS= -g -O2 -Wall -Werror 
+INCLUDES= -I../common
+CFLAGS= -g -O2 -Wall -Werror $(INCLUDES)
 LDFLAGS= -lX11 -lXtst -lcurses
 
 
@@ -24,8 +25,8 @@ rebuild: clean depend all
 depend:
 	makedepend $(OBJS:.o=.c)
 
-.cpp.o :
-	$(CXX) $(CFLAGS) -c $*.cpp -o $@
+.c.o :
+	$(CC) $(CFLAGS) -c $*.c -o $@
  
 
 clean:
@@ -54,4 +55,13 @@ itp-server.o: /usr/include/X11/Xosdefs.h /usr/include/X11/Xutil.h
 itp-server.o: /usr/include/X11/keysym.h /usr/include/X11/keysymdef.h
 itp-server.o: /usr/include/X11/extensions/XTest.h
 itp-server.o: /usr/include/X11/extensions/XInput.h
-itp-server.o: /usr/include/X11/extensions/XI.h
+itp-server.o: /usr/include/X11/extensions/XI.h /usr/include/sys/socket.h
+itp-server.o: /usr/include/sys/uio.h /usr/include/bits/uio.h
+itp-server.o: /usr/include/bits/socket.h /usr/include/limits.h
+itp-server.o: /usr/include/bits/posix1_lim.h /usr/include/bits/local_lim.h
+itp-server.o: /usr/include/linux/limits.h /usr/include/bits/posix2_lim.h
+itp-server.o: /usr/include/bits/sockaddr.h /usr/include/asm/socket.h
+itp-server.o: /usr/include/asm/sockios.h /usr/include/netdb.h
+itp-server.o: /usr/include/netinet/in.h /usr/include/stdint.h
+itp-server.o: /usr/include/bits/in.h /usr/include/bits/byteswap.h
+itp-server.o: /usr/include/rpc/netdb.h /usr/include/bits/netdb.h
