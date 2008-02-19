@@ -136,12 +136,12 @@ int main( int argc, char ** argv)
 						XTestFakeRelativeMotionEvent( dpy, pEvent->move_info.dx, pEvent->move_info.dy, 0 );
 						break;
 					case EVENT_TYPE_MOUSE_DOWN:
-						printf( "mouse down: %d", pEvent->button_info.button );
+						//printf( "mouse down: %d", pEvent->button_info.button );
 						XTestFakeButtonEvent( dpy, pEvent->button_info.button, 1, 0 );
 						break;
 
 					case EVENT_TYPE_MOUSE_UP:	
-						printf( "mouse up: %d", pEvent->button_info.button );
+						//printf( "mouse up: %d", pEvent->button_info.button );
 						XTestFakeButtonEvent( dpy, pEvent->button_info.button, 0, 0 );
 						break;
 

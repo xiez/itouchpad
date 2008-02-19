@@ -1,0 +1,14 @@
+-prefs page to support server/port
+view 1:
+-2 finger scroll
+-left/right on bottom
+-drag (use left/right while moving)
+view 2:
+-10 (or some reasonable number, i'll find out) buttons
+-prefs page for programmable key buttons for this view
+	\-> for each button, have a combo/drop-down that lists all the known button types.
+	\-> maybe add modifiers.
+
+
+-rotate view? (on the fly, or in preferences )
+
