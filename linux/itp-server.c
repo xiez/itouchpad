@@ -21,35 +21,35 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/extensions/XTest.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <unistd.h>
+
+#include "mouseevent.h"
 
 #define CURSOR_SPEED 10
+#define PORT 5583
+
+typedef int SOCKET;
 
 int main( int argc, char ** argv)
 {
-	//NOTES:
-	//Current code simply accepts arrowkey input and moves the mouse
-	//Network code, etc, to come shortly.
-	
-
+	MouseEvent event;
+	pMouseEvent pEvent = &event;
 
 	Display	*dpy; /* X server connection */
 	int xtest_major_version = 0;
 	int xtest_minor_version = 0;
 	int dummy;
 
-	int inputKey;
-
-	int dx, dy;
-
-	/*
-	 * curses init stuff... is this all really necessary for getch?
-	 */
-	initscr();	
-	keypad(stdscr, TRUE); /* enable keyboard mapping */
-	nonl(); /* tell curses not to do NL->CR/NL on output */
-	cbreak(); /* take input chars one at a time, no wait for \n */
-	noecho(); /* don't echo input */
-
+	SOCKET s, s_accept;
+	struct sockaddr_in s_add; //from anyone!
+	struct sockaddr s_client;
+	socklen_t s_client_size = sizeof( struct sockaddr );
+	int port = PORT;
+	int recvsize;
 
 
     /*
@@ -70,36 +70,87 @@ int main( int argc, char ** argv)
 	   exit(1);
     }
 
-	while( ( inputKey = getch() ) )
+//network stuff
+	//configure socket
+	if ( ( s = socket( PF_INET, SOCK_STREAM, 0 ) ) == -1 ) 
 	{
-		dx = dy = 0;
-		switch ( inputKey )
-		{
-			case KEY_UP:
-				dx = 0;
-				dy = -CURSOR_SPEED;
-				break;
-			case KEY_DOWN:
-				dx = 0;
-				dy = CURSOR_SPEED;
-				break;
-			case KEY_LEFT:
-				dx = -CURSOR_SPEED;
-				dy = 0;
-				break;
-			case KEY_RIGHT:
-				dx = CURSOR_SPEED;
-				dy = 0;
-
-			default:
-//				printf( "unknown!" );
-				break;
-		}
-
-		XTestFakeRelativeMotionEvent( dpy, dx, dy, 0 ); 
-		XFlush( dpy );
+		perror ( "Failed to create socket :(" ); 
+		exit( 2 );
 
 	}
+
+	memset( &s_add, 0, sizeof( struct sockaddr_in ) );
+	s_add.sin_family = AF_INET;
+	s_add.sin_port = htons( port );
+	s_add.sin_addr.s_addr = INADDR_ANY;
+
+	if ( bind( s, (struct sockaddr * )&s_add, sizeof( struct sockaddr_in ) ) == -1 )
+	{
+		perror( "Failed to bind socket" );
+		exit( 2 );
+	}
+
+	if( listen( s , 1 ) )
+	{
+		perror( "Can't listen!" );
+		exit( 2 );
+	}
+
+	while( 1 )
+	{
+
+		s_accept = accept( s, &s_client, &s_client_size );
+
+		if ( s_accept == -1 )
+		{
+			perror( "failed to accept!" );
+			return -1;
+		}
+
+		while( 1 )
+		{
+			recvsize = recv( s_accept, pEvent, sizeof( MouseEvent ), 0 );
+			if ( recvsize > 0 )//got data
+			{
+
+				switch( pEvent->event_t )
+				{
+					case EVENT_TYPE_MOUSE_MOVE:
+						XTestFakeRelativeMotionEvent( dpy, pEvent->move_info.dx, pEvent->move_info.dy, 0 );
+						break;
+					case EVENT_TYPE_MOUSE_DOWN:
+						printf( "mouse down: %d", pEvent->button_info.button );
+						XTestFakeButtonEvent( dpy, pEvent->button_info.button, true, 0 );
+						break;
+
+					case EVENT_TYPE_MOUSE_UP:	
+						printf( "mouse up: %d", pEvent->button_info.button );
+						XTestFakeButtonEvent( dpy, pEvent->button_info.button, false, 0 );
+						break;
+
+					default:
+						fprintf( stderr, "unknown message type!" );
+						break;
+				}
+
+				XFlush( dpy );
+			
+			}
+			else if ( recvsize == 0 )
+			{
+				//connection terminated
+				close( s_accept );
+				break; //exit this while loop, wait for another connection
+			}
+			else
+			{
+				perror( "error in recv" );
+			}
+		}
+
+	}
+
+	//shouldn't get here!
 
 	return 0;
 }
