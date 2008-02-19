@@ -31,6 +31,7 @@
 #import "NetworkController.h"
 #import "mouseevent.h"
 #import "mconnection.h"
+#import "consts.h"
 
 
 void init()
@@ -186,8 +187,8 @@ void sendMouseMove( int dx, int dy )
 {
 	MouseEvent e;
 	e.event_t = EVENT_TYPE_MOUSE_MOVE;
-	e.move_info.dx = dx;
-	e.move_info.dy = dy;
+	e.move_info.dx = dx * MOUSE_SPEED;
+	e.move_info.dy = dy * MOUSE_SPEED;
 
 	sendEvent( pCon, &e );
 
