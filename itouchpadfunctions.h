@@ -44,5 +44,7 @@ void readSettingsFromFile();
 
 void saveSettingsToFiles();
 
-void sendGesture( int dx, int dy ); 
+void sendMouseMove( int dx, int dy ); 
+
+void sendButtonPress( bool down );
 
