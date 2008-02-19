@@ -65,3 +65,5 @@ itp-server.o: /usr/include/asm/sockios.h /usr/include/netdb.h
 itp-server.o: /usr/include/netinet/in.h /usr/include/stdint.h
 itp-server.o: /usr/include/bits/in.h /usr/include/bits/byteswap.h
 itp-server.o: /usr/include/rpc/netdb.h /usr/include/bits/netdb.h
+itp-server.o: /usr/include/unistd.h /usr/include/bits/posix_opt.h
+itp-server.o: /usr/include/bits/confname.h /usr/include/getopt.h

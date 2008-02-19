@@ -39,12 +39,9 @@ int main( int argc, char ** argv )
 		return -1;
 	}
 
-
-	//move down and to the right 100
-	event.event_t = EVENT_TYPE_MOUSE_MOVE;
-	event.move_info.dx = 1;
-	event.move_info.dy = 1;
-
+	event.event_t = EVENT_TYPE_MOUSE_DOWN;
+	event.button_info.button = BUTTON_LEFT;
+	sendEvent( &con, pEvent );
 
 	//move down and to the right 100
 	event.event_t = EVENT_TYPE_MOUSE_MOVE;
@@ -59,12 +56,10 @@ int main( int argc, char ** argv )
 		}
 	}
 
-	event.event_t = EVENT_TYPE_MOUSE_DOWN;
-	event.button_info.button = BUTTON_LEFT;
-	sendEvent( &con, pEvent );
+	sleep( 1 );
 
 	event.event_t = EVENT_TYPE_MOUSE_UP;
-	sendEvent( &con, pEvent );
+	event.button_info.button = BUTTON_LEFT;
 	sendEvent( &con, pEvent );
 
 

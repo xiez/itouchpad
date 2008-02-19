@@ -52,4 +52,5 @@ install: $(APPNAME)
 
 server-linux:
 	cd $(SERVER) && make
+	
 
