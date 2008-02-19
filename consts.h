@@ -40,6 +40,8 @@
 //if your server is longer than this, too bad
 #define MAX_SERVER 100
 
+//speed factor
+#define MOUSE_SPEED 2
 
 //language strings
 #define L_ABOUT @"About"
