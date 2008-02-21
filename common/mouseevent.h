@@ -24,6 +24,8 @@
 #ifndef _MOUSEEVENT_H_
 #define _MOUSEEVENT_H_
 
+#define PORT 5583
+
 typedef enum
 {
 	EVENT_TYPE_MOUSE_DOWN,
