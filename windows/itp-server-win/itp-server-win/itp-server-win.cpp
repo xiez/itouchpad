@@ -110,6 +110,12 @@ int _tmain(int argc, _TCHAR* argv[])
 //						SetCursorPos( pt.x + pEvent->move_info.dx, pt.y + pEvent->move_info.dy );
 						mouse_event( MOUSEEVENTF_MOVE, pEvent->move_info.dx, pEvent->move_info.dy, 0, 0 );
 						break;
+					case EVENT_TYPE_MOUSE_SCROLL_MOVE:
+						mouse_event( MOUSEEVENTF_WHEEL, 0, 0, -pEvent->move_info.dy, 0 );
+						//HWHEEL doesn't seem to work?
+						mouse_event( MOUSEEVENTF_HWHEEL, 0, 0, pEvent->move_info.dx, 0 );
+
+						break;
 					
 						//NOTE: this assumes the mouse events are lbutton. fine for now, but needs to change!
 					case EVENT_TYPE_MOUSE_DOWN:
