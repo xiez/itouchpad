@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "itp-server-win", "itp-server-win\itp-server-win.vcproj", "{2191D71B-0349-45F5-94D7-6D7F69A8A5AC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2191D71B-0349-45F5-94D7-6D7F69A8A5AC}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2191D71B-0349-45F5-94D7-6D7F69A8A5AC}.Debug|Win32.Build.0 = Debug|Win32
+		{2191D71B-0349-45F5-94D7-6D7F69A8A5AC}.Release|Win32.ActiveCfg = Release|Win32
+		{2191D71B-0349-45F5-94D7-6D7F69A8A5AC}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -46,8 +46,6 @@
 
 #include "mouseevent.h"
 
-#define CURSOR_SPEED 10
-#define PORT 5583
 
 typedef int SOCKET;
 
