@@ -46,6 +46,10 @@
 
 #include "mouseevent.h"
 
+#define SCROLL_AMT 80
+#define BUTTON_SCROLL_UP 5
+#define BUTTON_SCROLL_DOWN 4
+
 
 typedef int SOCKET;
 
@@ -66,6 +70,7 @@ int main( int argc, char ** argv)
 	int port = PORT;
 	int recvsize;
 
+	int button, yDelta = 0, yTmp;
 
     /*
 	* Open the display using the $DISPLAY environment variable to locate
@@ -133,6 +138,39 @@ int main( int argc, char ** argv)
 					case EVENT_TYPE_MOUSE_MOVE:
 						XTestFakeRelativeMotionEvent( dpy, pEvent->move_info.dx, pEvent->move_info.dy, 0 );
 						break;
+					case EVENT_TYPE_MOUSE_SCROLL_MOVE:
+						//no x-scrolling :-/
+						yDelta += pEvent->move_info.dy;
+						if ( yDelta < 0 )//down
+						{
+							button = BUTTON_SCROLL_DOWN;
+							yTmp = - yDelta;
+						}
+						else
+						{
+							button = BUTTON_SCROLL_UP;
+							yTmp = yDelta;
+						}
+
+						// send as many clicks as necessary (ty synergy for this)
+						for( ; yTmp >= SCROLL_AMT; yTmp -= SCROLL_AMT )
+						{
+							XTestFakeButtonEvent( dpy, button, 1, 0 );
+							XTestFakeButtonEvent( dpy, button, 0, 0 );
+						}
+
+						//fix yTmp:
+						if ( yDelta < 0 )//we were scrolling down
+						{
+							yDelta = -yTmp;
+						}
+						else
+						{
+							yDelta = yTmp;
+						}
+
+						break;
+
 					case EVENT_TYPE_MOUSE_DOWN:
 						//printf( "mouse down: %d", pEvent->button_info.button );
 						XTestFakeButtonEvent( dpy, pEvent->button_info.button, 1, 0 );

@@ -29,6 +29,7 @@
 {
 	_xPrev = -1;
 	_yPrev = -1;
+	_curState = STATE_NONE;
 
 	return [super initWithFrame: rect ];
 
@@ -77,7 +78,17 @@
 	
 	if ( _xPrev != -1 && _yPrev != -1 ) //if valid previous coords
 	{
-		sendMouseMove( rect.origin.x - _xPrev, rect.origin.y - _yPrev );
+		switch ( _curState )
+		{
+			case STATE_MOUSE_DOWN_MOVE:
+				sendMouseMove( rect.origin.x - _xPrev, rect.origin.y - _yPrev );
+				break;
+			case STATE_MOUSE_DOWN_CHORDING_MOVE:
+				sendMouseScroll( rect.origin.x - _xPrev, rect.origin.y - _yPrev );
+				break;
+			default:
+				break;
+		}
 	}
 
 	[ self setCoords: event ];
@@ -88,9 +99,21 @@
 - (void)mouseDown: ( GSEvent * )event
 {
 
-	[ self setCoords: event ];
-
-	_dragged = false;
+	switch ( _curState )
+	{
+		case STATE_NONE:
+			_curState = STATE_MOUSE_DOWN;
+			[ self setCoords: event ];
+			break;
+		case STATE_MOUSE_DOWN: //mouse already down!
+			if ( GSEventIsChordingHandEvent( event ) )//if > 1 finger.. (maybe?)
+			{
+				_curState = STATE_MOUSE_DOWN_CHORDING;
+			}
+			break;
+		default:
+			break;
+	}
 
 //	[ self dumpGSEvent: event ];
 }
@@ -98,14 +121,25 @@
 - (void) mouseUp: (GSEvent *) event
 {
 
-
-//	NSLog( @"mouse up!" );
-	if ( !_dragged )
+	switch( _curState )
 	{
-		NSLog( @"click!" );
-		//since user didn't drag, we simulate full click
-		sendButtonPress( true );
-		sendButtonPress( false );
+		case STATE_MOUSE_DOWN:
+			NSLog( @"click!" );
+			//since user didn't drag, we simulate full click
+			sendButtonPress( true );
+			sendButtonPress( false );
+			_curState = STATE_NONE;
+			break;
+		case STATE_MOUSE_DOWN_CHORDING:
+			sendButtonPress( true );
+			_curState = STATE_MOUSE_DOWN_MOVE;
+			break;
+		case STATE_MOUSE_DOWN_CHORDING_MOVE: //end of scroll	
+		case STATE_MOUSE_DOWN_MOVE: //end of normal move, or drag
+			sendButtonPress( false );//can't hurt....?
+			_curState = STATE_NONE;
+		default:
+			break;
 	}
 
 //	[ self dumpGSEvent: event ];
@@ -114,9 +148,27 @@
 
 - (void) mouseDragged: ( GSEvent *)event
 {
-	[ self updateCoords: event ];
+
+	switch( _curState )
+	{
+		case STATE_MOUSE_DOWN:
+			_curState = STATE_MOUSE_DOWN_MOVE;
+		case STATE_MOUSE_DOWN_MOVE:	
+			[ self updateCoords: event ];
+			break;
+		case STATE_MOUSE_DOWN_CHORDING:
+			NSLog( @"scroll!" );
+			_curState = STATE_MOUSE_DOWN_CHORDING_MOVE;
+		case STATE_MOUSE_DOWN_CHORDING_MOVE:	
+			[ self updateCoords: event ];
+			break;
+		default:
+			break;
+
+
+	}
+
 	
-	_dragged = true;
 
 //	[ self dumpGSEvent: event ];
 }
