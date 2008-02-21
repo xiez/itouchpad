@@ -58,7 +58,7 @@ typedef struct
  *      Returns:  0 on success
  * =====================================================================================
  */
-int init_connection( pMConnection pCon, char * server, int port ); 
+int init_connection( pMConnection pCon, const char * serverip, int port ); 
 
 
 /* 

@@ -80,8 +80,7 @@ static iTouchpadApp * sharedInstance = nil;
 	[_window makeKey: self];
 	[_window _setHidden: NO];
 
-///	[_window setContentView: [ ViewController sharedInstance ] ];
-	[ _window setContentView: _mainView ];
+	[_window setContentView: [ ViewController sharedInstance ] ];
 
 	//top navigation bar.
 	_navTop = [[UINavigationBar alloc] initWithFrame: CGRectMake(
@@ -142,6 +141,7 @@ static iTouchpadApp * sharedInstance = nil;
 
 - (void) delayedInit
 {
+
 	if(	!init_server() )
 	{//if fail.. just go to prefs page
 		NSLog( @"connection failed... showing prefs view" );
