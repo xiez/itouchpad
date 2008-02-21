@@ -38,36 +38,121 @@
 #include <sys/socket.h>
 #include <unistd.h> //close
 #include <string.h> //memset
+#include <fcntl.h>
+#include <errno.h>
+
+#define CONNECT_TIMEOUT 5
 
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name:  init_connection
  *  Description:  Attempts to connect to a itp-server at the specified hostname and port
  *                Fills in pCon with the needed state information for use elsewhere
+ *                BLOCKING.
  *      Returns:  0 on success
  * =====================================================================================
  */
-int init_connection( pMConnection pCon, char * server, int port ) 
+int init_connection( pMConnection pCon, const char * serverip, int port ) 
 {
 	//makes assumptions about pCon, etc, being valid.
 	//will probably die if you give it bad parameters 
 	
 	int sockd;
+	fd_set fdset; 
+	struct timeval tv;
+	int arg, res, optval;
+	unsigned int optlen = sizeof( int );
+
 
 	if ( ( sockd = socket( PF_INET, SOCK_STREAM, 0 ) ) < 0 )
 	{
 		return -1;
 	}
 
+	//non-blocking code
+	if ( ( arg = fcntl( sockd, F_GETFL, NULL ) ) < 0 )
+	{
+		close( sockd );
+		return -2;
+	}
+
+	arg |= O_NONBLOCK; 
+	
+	if( fcntl( sockd, F_SETFL, arg ) < 0 )
+	{
+		close( sockd );
+		return -2;
+	} 
+
+
 	memset( &(pCon->s_add), 0, sizeof( struct sockaddr_in ) );
 	pCon->s_add.sin_family = AF_INET;
 	pCon->s_add.sin_port = htons( port );
-	pCon->s_add.sin_addr.s_addr = inet_addr( server );//must be an IP!
+	pCon->s_add.sin_addr.s_addr = inet_addr( serverip );//must be an IP!
 
-	if ( connect( sockd, (struct sockaddr *)&(pCon->s_add), sizeof( struct sockaddr_in) ) < 0 )
+	res = connect( sockd, (struct sockaddr *)&(pCon->s_add), sizeof( struct sockaddr_in) );
+	if ( res < 0 )
 	{
-		return -1;
+		if ( errno == EINPROGRESS )
+		{//it's not blocking like we told it (not) to....
+			tv.tv_sec = CONNECT_TIMEOUT;
+			tv.tv_usec = 0;
+			FD_ZERO( &fdset );
+			FD_SET( sockd, &fdset );
+			res = select( sockd + 1, NULL, &fdset, NULL, &tv );//wait until connect finishes or timeout
+
+			if ( res < 0 && errno != EINTR )
+			{
+				close( sockd );
+				return -3;//error connecting
+			}
+			else if ( res == 0 )
+			{
+				close( sockd );
+				return -4;//timeout :(
+			}
+			//res > 0
+
+			//make sure things went smoothly...
+
+			if ( getsockopt( sockd, SOL_SOCKET, SO_ERROR, (void*)(&optval), &optlen ) < 0 ) 
+			{
+				close( sockd );
+				return -3;//error in getsockopt, treat as connect error
+			}
+
+			if ( optval )
+			{
+				//connect didn't go so well
+				close( sockd );
+				return -3;
+			}
+		}
+		else
+		{
+			//not the errorcode we expected..so error
+			close( sockd );
+			return -3;
+		}
 	}
+
+	//back to blocking since that's what we want
+	if ( ( arg = fcntl( sockd, F_GETFL, NULL ) ) < 0 )
+	{
+		close( sockd );
+		return -2;
+	}
+
+	arg &= ~O_NONBLOCK;//make it blocking again..
+
+	if ( fcntl( sockd, F_SETFL, arg ) < 0 )
+	{
+		close( sockd );
+		return -2;
+	}
+
+	//yay done
+
 
 	pCon->sockd = sockd;
 

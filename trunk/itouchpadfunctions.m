@@ -23,6 +23,9 @@
 #import <Foundation/NSHost.h>
 #import <UIKit/UIKit.h>
 
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
 #import <dns_sd.h>
 #import <sys/select.h>
 #import <unistd.h>
@@ -79,7 +82,7 @@ void readSettingsFromFile()
 {
 	//TODO: actually read them in!
 
-	strcpy( server, "192.168.255.1" );
+	strcpy( server, "192.168.255.3" );
 	port = 5583;
 
 }
@@ -97,9 +100,21 @@ void saveSettingsToFiles()
 
 
 //dns request
-bool resolveHostname( char * hostname )
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  resolveHostname
+ *  Description:  attempts to resolve the hostname using apple's API.  returns string containing the ip if successful, else nil.
+ * =====================================================================================
+ */
+NSString * resolveHostname( char * hostname )
 {
 	NSString * name = [NSString stringWithFormat: @"%s", hostname ];
+
+	if ( inet_addr( hostname ) != INADDR_NONE )
+	{//it's already in a format we like/can use
+		return name;
+	}
 
 	NSLog( @"Resolving for %@", name );
 	DNSServiceErrorType error;
@@ -124,7 +139,7 @@ bool resolveHostname( char * hostname )
 		FD_SET(dns_sd_fd, &readfds);
 		tv.tv_sec = DNS_RESOLV_TIMEOUT;
 		tv.tv_usec = 0;
-		bool ret = false;
+		NSString * ret = nil;
 		int result = select(nfds, &readfds, (fd_set*)NULL, (fd_set*)NULL, &tv);
 		if (result > 0)
 		{
@@ -132,7 +147,7 @@ bool resolveHostname( char * hostname )
 			{
 				//remove this if you want to compile in c, not obj-c
 				NSLog( @"resolved %s to %@", hostname, [ [ NSHost hostWithName: name ] address ] );
-				ret = true;
+				ret = [ NSString stringWithString: [ [ NSHost hostWithName: name] address ] ];
 			}
 		}
 		//clean up and return accordingly
@@ -145,11 +160,12 @@ bool resolveHostname( char * hostname )
 
 	NSLog( @"dns error: %d", error );
 
-	return false;
+	return nil;
 }
 
 int init_server()
 {
+	NSString * serverip;
 	NSLog( @"Checking connection....");
 
 	if(!([[NetworkController sharedInstance]isNetworkUp]))
@@ -167,13 +183,10 @@ int init_server()
 	readSettingsFromFile();
 	
 
-//	we don't do dns for now,
-//	since we're only supporting actual ip addresses.
-//
-//	if ( !resolveHostname( (char *)server ) )
-//		return false; //DNS failed :(
+	if ( ( serverip = resolveHostname( (char *)server ) ) == nil  )
+		return false; //DNS failed :(
 
-	if ( init_connection( pCon, server, port ) < 0 )
+	if ( init_connection( pCon, [ serverip cString ], port ) < 0 )
 	{
 		m_hasConnected = false;
 		return false;
