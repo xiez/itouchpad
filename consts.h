@@ -37,9 +37,6 @@
 #define QUIT_WAIT_TIME 5.0
 #define DNS_RESOLV_TIMEOUT 10.0
 
-//if your server is longer than this, too bad
-#define MAX_SERVER 100
-
 //speed factor
 #define MOUSE_SPEED 2
 
@@ -56,4 +53,11 @@
 #define L_QUIT @"Quit"
 #define L_SERVER @"Server"
 #define L_TOUCHPAD_SETTINGS @"iTouchPad Settings"
+
+//settings stuff
+#define K_SERVER @"ITP-Server"
+#define K_PORT @"ITP-Port"
+
+#define DEFAULT_SERVER @""
+#define DEFAULT_PORT 5583
 
