@@ -23,8 +23,6 @@
 
 //Handles the network stuff, and settings management
 
-char server[ MAX_SERVER ];
-int port;
 
 //methods:
 
@@ -34,15 +32,18 @@ bool hasConnected();
 
 int init_server();
 
+//Settings stuff:
+
 NSString * getServer();
+
 int	getPort();
 
+
 void setServer( NSString * server );
+
 void setPort( int port );
 
-void readSettingsFromFile();
-
-void saveSettingsToFiles();
+//event messaging stuff:
 
 void sendMouseMove( int dx, int dy ); 
 

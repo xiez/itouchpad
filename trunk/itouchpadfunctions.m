@@ -35,12 +35,17 @@
 #import "mouseevent.h"
 #import "mconnection.h"
 #import "consts.h"
+#import "PrefsView.h"
 
 
 void init()
 {
-	port = -1;
-	server[0] = '\0';
+	NSMutableDictionary * defs = [[ NSMutableDictionary alloc ] init ];
+	[ defs setObject: DEFAULT_SERVER forKey: K_SERVER ];
+	[ defs setObject: [ NSNumber numberWithInt: DEFAULT_PORT ] forKey: K_PORT ];
+	[ [ NSUserDefaults standardUserDefaults ] registerDefaults: defs ];
+
+	[ [ PrefsView sharedInstance ] loadSettings ];
 }
 
 static bool m_hasConnected;
@@ -55,47 +60,31 @@ bool hasConnected()
 
 NSString * getServer()
 {
-	if ( server && strlen( server ) > 0 )
-		return [NSString stringWithCString: server ];
-	return @"";
+	NSString * nsServer = [ [ NSUserDefaults standardUserDefaults ] stringForKey: K_SERVER ];
+	if ( nsServer == nil )
+	{
+		return @"";
+	}
+
+	return nsServer;
 }
 
 int getPort()
 {
-	return port;
+	NSNumber * nPort = [ [ NSUserDefaults standardUserDefaults ] objectForKey: K_PORT ];
+	return [ nPort intValue ];
 }
 
 //bool weCreatedNNTPServer = false;
 void setServer( NSString * nsServer )
 {
-
-	strncpy( server, [nsServer cString], MAX_SERVER - 1 );
-
+	[ [ NSUserDefaults standardUserDefaults ] setObject: nsServer forKey: K_SERVER ];
 }
 
 void setPort( int newport )
 {
-	port = newport;
+	[ [ NSUserDefaults standardUserDefaults ] setInteger: newport forKey: K_PORT ];
 }
-
-void readSettingsFromFile()
-{
-	//TODO: actually read them in!
-
-	strcpy( server, "192.168.255.3" );
-	port = 5583;
-
-}
-
-void saveSettingsToFiles()
-{
-	//TODO: IMPLEMENT THIS!
-}
-
-
-
-
-
 
 
 
@@ -107,7 +96,7 @@ void saveSettingsToFiles()
  *  Description:  attempts to resolve the hostname using apple's API.  returns string containing the ip if successful, else nil.
  * =====================================================================================
  */
-NSString * resolveHostname( char * hostname )
+NSString * resolveHostname( const char * hostname )
 {
 	NSString * name = [NSString stringWithFormat: @"%s", hostname ];
 
@@ -178,15 +167,16 @@ int init_server()
 			sleep( 3 );
 		}
 	}
-	
 
-	readSettingsFromFile();
-	
+	if ( getServer() == DEFAULT_SERVER )
+	{
+		return false; //never want the default
+	}
 
-	if ( ( serverip = resolveHostname( (char *)server ) ) == nil  )
+	if ( ( serverip = resolveHostname( [ getServer() cString ]) ) == nil  )
 		return false; //DNS failed :(
 
-	if ( init_connection( pCon, [ serverip cString ], port ) < 0 )
+	if ( init_connection( pCon, [ serverip cString ], getPort() ) < 0 )
 	{
 		m_hasConnected = false;
 		return false;

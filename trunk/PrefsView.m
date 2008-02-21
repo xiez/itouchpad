@@ -200,11 +200,9 @@ static PrefsView * sharedInstance = nil;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-//call this to tell us to fetch/loud our values
+//call this to tell us to fetch/load our values
 - (void) loadSettings
 {
-	readSettingsFromFile();//if anything has messed things up... pull from file again
-
 	[ [ [ _rows objectAtIndex: SERVER_ROW ] textField ] setText: (id)getServer() ]; 
 	[ [ [ _rows objectAtIndex: PORT_ROW ] textField ] setText: (id)[ NSString stringWithFormat: @"%d", getPort() ] ];
 
@@ -217,7 +215,6 @@ static PrefsView * sharedInstance = nil;
 	setServer( [ [ [ _rows objectAtIndex: SERVER_ROW ] textField ] text ] );
 	setPort( [ [ [ [ _rows objectAtIndex: PORT_ROW ] textField ] text ] intValue ] );
 
-	saveSettingsToFiles();
 }
 
 
