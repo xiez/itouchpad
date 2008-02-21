@@ -47,5 +47,7 @@ void setPort( int port );
 
 void sendMouseMove( int dx, int dy ); 
 
+void sendMouseScroll( int dx, int dy );
+
 void sendButtonPress( bool down );
 

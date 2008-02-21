@@ -22,11 +22,19 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
+typedef enum
+{
+	STATE_NONE,
+	STATE_MOUSE_DOWN,
+	STATE_MOUSE_DOWN_CHORDING,
+	STATE_MOUSE_DOWN_MOVE,
+	STATE_MOUSE_DOWN_CHORDING_MOVE
+} states;
 
 @interface MainTable : UITable
 {
 
-bool _dragged;
+states _curState;	
 int _xPrev;
 int _yPrev;
 

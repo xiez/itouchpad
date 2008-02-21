@@ -197,6 +197,17 @@ void sendMouseMove( int dx, int dy )
 
 }
 
+void sendMouseScroll( int dx, int dy )
+{
+	MouseEvent e;
+	e.event_t = EVENT_TYPE_MOUSE_SCROLL_MOVE;
+	e.move_info.dx = dx * MOUSE_SPEED;
+	e.move_info.dy = dy * MOUSE_SPEED;
+
+	sendEvent( pCon, &e );
+
+}
+
 void sendButtonPress( bool down )
 {
 	MouseEvent e;

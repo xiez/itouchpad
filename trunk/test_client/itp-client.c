@@ -38,7 +38,7 @@
 
 #include <stdio.h> //perror
 
-#define HOST "127.0.0.1"
+#define HOST "10.5.16.185"
 #define PORT 5583
 
 int main( int argc, char ** argv )

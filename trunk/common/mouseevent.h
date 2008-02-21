@@ -30,12 +30,13 @@ typedef enum
 {
 	EVENT_TYPE_MOUSE_DOWN,
 	EVENT_TYPE_MOUSE_UP,
-	EVENT_TYPE_MOUSE_MOVE
+	EVENT_TYPE_MOUSE_MOVE,
+	EVENT_TYPE_MOUSE_SCROLL_MOVE	
 } eventtype;
 
 typedef enum
 {
-	BUTTON_LEFT = 1, //TODO: check
+	BUTTON_LEFT = 1,
 	BUTTON_RIGHT = 2
 } buttons;
 
