@@ -169,6 +169,12 @@ int init_connection( pMConnection pCon, const char * serverip, int port )
  */
 int sendEvent( pMConnection pCon, pMouseEvent pEvent )
 {
+	/* TODO:
+	 * Instead of sending all the deltas as they occur, just add the delta to a running total, and
+	 * send that delta on a timer/select.  This way you don't end up spamming the network with
+	 * packets to achieve a granularity that isn't necessary.
+	 * Should make the experience smoother
+	 */
 	size_t size = sizeof( MouseEvent );
 
 	if ( send( pCon->sockd, pEvent, size, 0 ) != size )
