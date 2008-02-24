@@ -47,20 +47,20 @@
 		http://www.cocoadev.com/index.pl?GraphicsServices
 	*/
 
-/*	NSLog(@"GSEventIsChordingHandEvent: %d", GSEventIsChordingHandEvent(event));
-	NSLog(@"GSEventGetClickCount: %d", GSEventGetClickCount(event));
-	CGRect rect = GSEventGetLocationInWindow(event);
-	NSLog(@"GSEventGetLocationInWindow: (%f, %f, %f, %f)", rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
-	NSLog(@"GSEventGetDeltaX: %f", GSEventGetDeltaX(event));
-	NSLog(@"GSEventGetDeltaY: %f", GSEventGetDeltaY(event));
-	CGPoint inner = GSEventGetInnerMostPathPosition(event);
-	NSLog(@"GSEventGetInnerMostPathPosition: (%f, %f)", inner.x, inner.y);
-	CGPoint outer = GSEventGetOuterMostPathPosition(event);
-	NSLog(@"GSEventGetOuterMostPathPosition: (%f, %f)", outer.x, outer.y);
-	NSLog(@"GSEventGetSubType: %d", GSEventGetSubType(event));
-	NSLog(@"GSEventGetType: %d", GSEventGetType(event));
-	NSLog(@"GSEventDeviceOrientation: %d", GSEventDeviceOrientation(event));
-*/
+//	NSLog(@"GSEventIsChordingHandEvent: %d", GSEventIsChordingHandEvent(event));
+//	NSLog(@"GSEventGetClickCount: %d", GSEventGetClickCount(event));
+//	CGRect rect = GSEventGetLocationInWindow(event);
+//	NSLog(@"GSEventGetLocationInWindow: (%f, %f, %f, %f)", rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
+//	NSLog(@"GSEventGetDeltaX: %f", GSEventGetDeltaX(event));
+//	NSLog(@"GSEventGetDeltaY: %f", GSEventGetDeltaY(event));
+//	CGPoint inner = GSEventGetInnerMostPathPosition(event);
+//	NSLog(@"GSEventGetInnerMostPathPosition: (%f, %f)", inner.x, inner.y);
+//	CGPoint outer = GSEventGetOuterMostPathPosition(event);
+//	NSLog(@"GSEventGetOuterMostPathPosition: (%f, %f)", outer.x, outer.y);
+//	NSLog(@"GSEventGetSubType: %d", GSEventGetSubType(event));
+//	NSLog(@"GSEventGetType: %d", GSEventGetType(event));
+//	NSLog(@"GSEventDeviceOrientation: %d", GSEventDeviceOrientation(event));
+
 }
 
 - (void)setCoords: (GSEvent *)event
@@ -131,9 +131,13 @@
 			_curState = STATE_NONE;
 			break;
 		case STATE_MOUSE_DOWN_CHORDING:
+			if ( GSEventIsChordingHandEvent( event ) )
+			{
+				NSLog( @"drag!" );
+			}
 			sendButtonPress( true );
-			_curState = STATE_MOUSE_DOWN_MOVE;
 			break;
+
 		case STATE_MOUSE_DOWN_CHORDING_MOVE: //end of scroll	
 		case STATE_MOUSE_DOWN_MOVE: //end of normal move, or drag
 			sendButtonPress( false );//can't hurt....?
@@ -142,7 +146,7 @@
 			break;
 	}
 
-//	[ self dumpGSEvent: event ];
+	[ self dumpGSEvent: event ];
 
 }
 
@@ -153,12 +157,26 @@
 	{
 		case STATE_MOUSE_DOWN:
 			_curState = STATE_MOUSE_DOWN_MOVE;
+			if ( GSEventIsChordingHandEvent( event ) )
+			{
+				_curState = STATE_MOUSE_DOWN_CHORDING;
+				break;
+			}
 		case STATE_MOUSE_DOWN_MOVE:	
 			[ self updateCoords: event ];
 			break;
 		case STATE_MOUSE_DOWN_CHORDING:
-			NSLog( @"scroll!" );
-			_curState = STATE_MOUSE_DOWN_CHORDING_MOVE;
+			if ( GSEventIsChordingHandEvent( event ) )
+			{//if still has > 1 finger down. scroll
+				NSLog( @"scroll!" );
+				_curState = STATE_MOUSE_DOWN_CHORDING_MOVE;
+			}
+			else
+			{
+				NSLog( @"drag!" );
+				sendButtonPress( true );
+				_curState = STATE_MOUSE_DOWN_MOVE;
+			}
 		case STATE_MOUSE_DOWN_CHORDING_MOVE:	
 			[ self updateCoords: event ];
 			break;
@@ -170,7 +188,7 @@
 
 	
 
-//	[ self dumpGSEvent: event ];
+	[ self dumpGSEvent: event ];
 }
 
 
