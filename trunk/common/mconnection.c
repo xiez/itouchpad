@@ -35,6 +35,7 @@
 #include "mconnection.h"
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h> //TCP_NODELAY
 #include <sys/socket.h>
 #include <unistd.h> //close
 #include <string.h> //memset
@@ -42,6 +43,8 @@
 #include <errno.h>
 
 #define CONNECT_TIMEOUT 5
+
+#define USE_NAGLE_DELAY 0
 
 /* 
  * ===  FUNCTION  ======================================================================
@@ -62,6 +65,7 @@ int init_connection( pMConnection pCon, const char * serverip, int port )
 	struct timeval tv;
 	int arg, res, optval;
 	unsigned int optlen = sizeof( int );
+	int dont_use_nagle = ! USE_NAGLE_DELAY;
 
 
 	if ( ( sockd = socket( PF_INET, SOCK_STREAM, 0 ) ) < 0 )
@@ -84,6 +88,11 @@ int init_connection( pMConnection pCon, const char * serverip, int port )
 		return -2;
 	} 
 
+	if ( setsockopt( sockd, IPPROTO_TCP, TCP_NODELAY, (char *)&dont_use_nagle, sizeof( dont_use_nagle ) ) == -1 )
+	{
+		close ( sockd );
+		return -2;
+	}
 
 	memset( &(pCon->s_add), 0, sizeof( struct sockaddr_in ) );
 	pCon->s_add.sin_family = AF_INET;
