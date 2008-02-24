@@ -129,7 +129,7 @@ int main( int argc, char ** argv)
 
 		while( 1 )
 		{
-			recvsize = recv( s_accept, pEvent, sizeof( MouseEvent ), 0 );
+			recvsize = recv( s_accept, pEvent, sizeof( MouseEvent ), MSG_WAITALL );
 			if ( recvsize == sizeof( MouseEvent ) )//got data
 			{
 
@@ -189,6 +189,10 @@ int main( int argc, char ** argv)
 
 				XFlush( dpy );
 			
+			}
+			else if ( recvsize > 0 )
+			{
+				fprintf( stderr, "partial recv!" );
 			}
 			else if ( recvsize == 0 )
 			{
