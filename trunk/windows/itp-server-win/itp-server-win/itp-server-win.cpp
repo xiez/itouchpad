@@ -41,6 +41,15 @@
 
 #include "../../../common/mouseevent.h"
 
+#define USE_ACCEL 1
+
+//dang windows lack of compliance
+#ifndef MSG_WAITALL
+//#define MSG_WAITALL 0x08
+//we define it as zero, since I can't get it to work.
+#define MSG_WAITALL 0
+#endif
+
 int _tmain(int argc, _TCHAR* argv[])
 {
 	MouseEvent event;
@@ -53,6 +62,11 @@ int _tmain(int argc, _TCHAR* argv[])
 	int s_client_size = sizeof( struct sockaddr );
 	int port = PORT;
 	int recvsize;
+
+	//mouse-relative move:
+	int oldSpeed[4];
+	bool accelChanged;
+
 
 //network stuff
 	//WSA \o/
@@ -100,15 +114,42 @@ int _tmain(int argc, _TCHAR* argv[])
 
 		while( 1 )
 		{
-			recvsize = recv( s_accept, (char *)pEvent, sizeof( MouseEvent ), 0 );
-			if ( recvsize > 0 )//got data
+			recvsize = recv( s_accept, (char *)pEvent, sizeof( MouseEvent ), MSG_WAITALL );
+			if ( recvsize == sizeof( MouseEvent ) )//got data
 			{
 				switch( pEvent->event_t )
 				{
 					case EVENT_TYPE_MOUSE_MOVE:
 //						GetCursorPos( &pt );
 //						SetCursorPos( pt.x + pEvent->move_info.dx, pt.y + pEvent->move_info.dy );
-						mouse_event( MOUSEEVENTF_MOVE, pEvent->move_info.dx, pEvent->move_info.dy, 0, 0 );
+						//the mouse-accel related code is from synergy, ty
+						// save mouse speed & acceleration
+						#ifdef USE_ACCEL
+						oldSpeed[4];
+						accelChanged =
+									SystemParametersInfo(SPI_GETMOUSE,0, oldSpeed, 0) &&
+									SystemParametersInfo(SPI_GETMOUSESPEED, 0, oldSpeed + 3, 0);
+					
+						// use 1:1 motion
+						if (accelChanged) {
+							int newSpeed[4] = { 0, 0, 0, 1 };
+							accelChanged =
+									SystemParametersInfo(SPI_SETMOUSE, 0, newSpeed, 0) ||
+									SystemParametersInfo(SPI_SETMOUSESPEED, 0, newSpeed + 3, 0);
+						}
+					
+						// move relative to mouse position
+						mouse_event(MOUSEEVENTF_MOVE, pEvent->move_info.dx, pEvent->move_info.dy, 0, 0);
+					
+						// restore mouse speed & acceleration
+						if (accelChanged) {
+							SystemParametersInfo(SPI_SETMOUSE, 0, oldSpeed, 0);
+							SystemParametersInfo(SPI_SETMOUSESPEED, 0, oldSpeed + 3, 0);
+						}
+						#else
+							mouse_event( MOUSEEVENTF_MOVE, pEvent->move_info.dx, pEvent->move_info.dy, 0, 0 );
+						#endif
+
 						break;
 					case EVENT_TYPE_MOUSE_SCROLL_MOVE:
 						mouse_event( MOUSEEVENTF_WHEEL, 0, 0, -pEvent->move_info.dy, 0 );
@@ -127,12 +168,16 @@ int _tmain(int argc, _TCHAR* argv[])
 						break;
 
 					default:
-						fprintf( stderr, "unknown message type!" );
+						fprintf( stderr, "unknown message type: %d\n", pEvent->event_t );
 						break;
 				}
 
 				//XFlush( dpy );
 			
+			}
+			else if ( recvsize > 0 )
+			{
+				fprintf( stderr, "partial recv!" );
 			}
 			else if ( recvsize == 0 )
 			{
