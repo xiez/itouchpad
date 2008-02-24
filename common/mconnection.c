@@ -44,7 +44,7 @@
 
 #define CONNECT_TIMEOUT 5
 
-#define USE_NAGLE_DELAY 0
+#define USE_NAGLE_DELAY 1
 
 /* 
  * ===  FUNCTION  ======================================================================
