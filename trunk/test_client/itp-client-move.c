@@ -38,7 +38,7 @@
 
 #include <stdio.h> //perror
 
-#define HOST "10.5.16.185"
+#define HOST "192.168.255.1"
 #define PORT 5583
 
 int main( int argc, char ** argv )
@@ -58,31 +58,29 @@ int main( int argc, char ** argv )
 		return -1;
 	}
 
-	event.event_t = EVENT_TYPE_MOUSE_DOWN;
-	event.button_info.button = BUTTON_LEFT;
-	sendEvent( &con, pEvent );
-
-	sleep( 1 );
-
-	//move down and to the right 100
 	event.event_t = EVENT_TYPE_MOUSE_MOVE;
-	event.move_info.dx = 1;
-	event.move_info.dy = 1;
 
-	for( counter = 0; counter < 100; counter++ )
+	while ( 1 )
 	{
-		if( sendEvent( &con, pEvent ) < 0 )
+		event.move_info.dx = 2;
+		event.move_info.dy = 2;
+		for( counter = 0; counter < 200; counter++ )
 		{
-			printf( "error!" );
+			if( sendEvent( &con, pEvent ) < 0 )
+			{
+				printf( "error!" );
+			}
+		}
+		event.move_info.dx = -2;
+		event.move_info.dy = -2;
+		for( counter = 0; counter < 200; counter++ )
+		{
+			if( sendEvent( &con, pEvent ) < 0 )
+			{
+				printf( "error!" );
+			}
 		}
 	}
-
-	sleep( 1 );
-
-	event.event_t = EVENT_TYPE_MOUSE_UP;
-	event.button_info.button = BUTTON_LEFT;
-	sendEvent( &con, pEvent );
-
 
 	close_connection( pCon );
 

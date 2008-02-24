@@ -188,12 +188,18 @@ int init_server()
 
 void sendMouseMove( int dx, int dy )
 {
+//	if ( dx == 0 && dy == 0 )
+//	{
+//		fprintf( stderr, "Discarding worthless zero-delta move message!\n" );
+//	}
 	MouseEvent e;
 	e.event_t = EVENT_TYPE_MOUSE_MOVE;
 	e.move_info.dx = dx * MOUSE_SPEED;
 	e.move_info.dy = dy * MOUSE_SPEED;
 
 	sendEvent( pCon, &e );
+
+	NSLog( @"Sending move!" );
 
 }
 

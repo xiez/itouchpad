@@ -130,12 +130,13 @@ int main( int argc, char ** argv)
 		while( 1 )
 		{
 			recvsize = recv( s_accept, pEvent, sizeof( MouseEvent ), 0 );
-			if ( recvsize > 0 )//got data
+			if ( recvsize == sizeof( MouseEvent ) )//got data
 			{
 
 				switch( pEvent->event_t )
 				{
 					case EVENT_TYPE_MOUSE_MOVE:
+					//	printf( "move: %d, %d!\n", pEvent->move_info.dx, pEvent->move_info.dy );
 						XTestFakeRelativeMotionEvent( dpy, pEvent->move_info.dx, pEvent->move_info.dy, 0 );
 						break;
 					case EVENT_TYPE_MOUSE_SCROLL_MOVE:
@@ -182,7 +183,7 @@ int main( int argc, char ** argv)
 						break;
 
 					default:
-						fprintf( stderr, "unknown message type!" );
+						fprintf( stderr, "unknown message type: %d\n", pEvent->event_t );
 						break;
 				}
 
