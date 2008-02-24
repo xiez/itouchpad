@@ -1,6 +1,4 @@
--prefs page to support server/port
 view 1:
--2 finger scroll
 -left/right on bottom
 -drag (use left/right while moving)
 view 2:
@@ -11,4 +9,8 @@ view 2:
 
 
 -rotate view? (on the fly, or in preferences )
+
+-server exit.. signal handle and close socket. (or just use SO_REUSEADDR or w/e that is )	
+
+-mouse jumps a bit on initial movement..fix!	
 
