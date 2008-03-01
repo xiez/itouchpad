@@ -1,12 +1,12 @@
 /*
  * =====================================================================================
  *
- *	  Filename:  itp-server.c
+ *	  Filename:  itp-server-mac.c
  *
  *    Description:  itp-server --listens for a itp client and accepts mouse requests..
  *
  *	   Version:  1.0
- *	   Created:  02/18/2008 09:18:12 PM
+ *	   Created:  03/1/2008 03:06:18 PM
  *
  *	    Author:  Will Dietz (WD), wdietz2@uiuc.edu
  *	   Company:  dtzTech
@@ -35,9 +35,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/extensions/XTest.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netdb.h>
@@ -58,11 +55,6 @@ int main( int argc, char ** argv)
 	MouseEvent event;
 	pMouseEvent pEvent = &event;
 
-	Display	*dpy; /* X server connection */
-	int xtest_major_version = 0;
-	int xtest_minor_version = 0;
-	int dummy;
-
 	SOCKET s, s_accept;
 	struct sockaddr_in s_add; //from anyone!
 	struct sockaddr s_client;
@@ -71,24 +63,6 @@ int main( int argc, char ** argv)
 	int recvsize;
 
 	int button, yDelta = 0, yTmp;
-
-    /*
-	* Open the display using the $DISPLAY environment variable to locate
-	* the X server.  See Section 2.1.
-	*/
-    if ((dpy = XOpenDisplay(NULL)) == NULL) {
-	   fprintf(stderr, "%s: can't open %s\en", argv[0], XDisplayName(NULL));
-	   exit(1);
-    }
-
-    Bool success = XTestQueryExtension(dpy, &dummy, &dummy,
-&xtest_major_version, &xtest_minor_version);
-    if(success == False || xtest_major_version < 2 ||
-(xtest_major_version <= 2 && xtest_minor_version < 2))
-    {
-	   fprintf(stderr,"XTEST extension not supported");
-	   exit(1);
-    }
 
 //network stuff
 	//configure socket
@@ -136,8 +110,15 @@ int main( int argc, char ** argv)
 				switch( pEvent->event_t )
 				{
 					case EVENT_TYPE_MOUSE_MOVE:
-					//	printf( "move: %d, %d!\n", pEvent->move_info.dx, pEvent->move_info.dy );
-						XTestFakeRelativeMotionEvent( dpy, pEvent->move_info.dx, pEvent->move_info.dy, 0 );
+						Point pt;
+						CGPoint newloc;
+						GetGlobalMouse( &pt );//get cursor pos
+						//update x/y
+						newloc.x = pt.h + pEvent->move_info.dx;
+						newloc.y = pt.v + pEvent->move_info.dy;
+
+						CGPostMouseEvent( newloc, true /*yes move there*/, 0 ); 
+
 						break;
 					case EVENT_TYPE_MOUSE_SCROLL_MOVE:
 						//no x-scrolling :-/
@@ -153,12 +134,18 @@ int main( int argc, char ** argv)
 							yTmp = yDelta;
 						}
 
-						// send as many clicks as necessary (ty synergy for this)
-						for( ; yTmp >= SCROLL_AMT; yTmp -= SCROLL_AMT )
-						{
-							XTestFakeButtonEvent( dpy, button, 1, 0 );
-							XTestFakeButtonEvent( dpy, button, 0, 0 );
+						//this code made a lot more sense in linux, TODO: CLEAN THIS UP
+						//TODO: mac osx has a api to get the exact scroll amount, look into that
+						if ( yTmp/SCROLL_AMT != 0 )
+						{//if any clicks need to be made...
+							
+							//send the number of whole clicks....
+							CGPostScrollWheelEvent( 1, yTmp/SCROLL_AMT ); 
+
+							//remove them from our counter
+							yTmp %=SCROLL_AMT;
 						}
+
 
 						//fix yTmp:
 						if ( yDelta < 0 )//we were scrolling down
@@ -174,12 +161,15 @@ int main( int argc, char ** argv)
 
 					case EVENT_TYPE_MOUSE_DOWN:
 						//printf( "mouse down: %d", pEvent->button_info.button );
-						XTestFakeButtonEvent( dpy, pEvent->button_info.button, 1, 0 );
+						//TODO: MOUSE DOWN!
+
+
 						break;
 
 					case EVENT_TYPE_MOUSE_UP:	
 						//printf( "mouse up: %d", pEvent->button_info.button );
-						XTestFakeButtonEvent( dpy, pEvent->button_info.button, 0, 0 );
+						//TODO: MOUSE UP!
+
 						break;
 
 					default:
@@ -187,7 +177,7 @@ int main( int argc, char ** argv)
 						break;
 				}
 
-				XFlush( dpy );
+				//flush events, if needed in macosx
 			
 			}
 			else if ( recvsize > 0 )
