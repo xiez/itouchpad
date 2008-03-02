@@ -46,7 +46,7 @@
 
 #include "mouseevent.h"
 
-#define SCROLL_AMT 40
+#define SCROLL_AMT 10
 #define BUTTON_SCROLL_UP 5
 #define BUTTON_SCROLL_DOWN 4
 
@@ -55,6 +55,8 @@ typedef int SOCKET;
 
 int main( int argc, char ** argv)
 {
+	CGPoint newloc;
+	Point pt;
 	MouseEvent event;
 	pMouseEvent pEvent = &event;
 
@@ -65,7 +67,7 @@ int main( int argc, char ** argv)
 	int port = PORT;
 	int recvsize;
 
-	int button, xDelta=0, yDelta=0;
+	int xDelta=0, yDelta=0;
 
 //network stuff
 	//configure socket
@@ -112,6 +114,17 @@ int main( int argc, char ** argv)
 
 				switch( pEvent->event_t )
 				{
+					case EVENT_TYPE_MOUSE_MOVE:
+						printf("Mouse move\n");
+						fflush( stdout );
+						GetGlobalMouse( &pt );//get cursor pos
+						//update x/y
+						newloc.x = pt.h + pEvent->move_info.dx;
+						newloc.y = pt.v + pEvent->move_info.dy;
+
+						CGPostMouseEvent( newloc, true /*yes move there*/, 0 , false); 
+
+						break;
 					case EVENT_TYPE_MOUSE_SCROLL_MOVE:
 						printf( "Scrolling\n" );
 						fflush( stdout );
@@ -119,29 +132,16 @@ int main( int argc, char ** argv)
 						yDelta += pEvent->move_info.dy;
 
 						//TODO: mac osx has a api to get the exact scroll amount, look into that
-						if ( ( yTmp/SCROLL_AMT != 0 )  || ( xDelta/SCROLL_AMT != 0 ) )
+						if ( ( yDelta/SCROLL_AMT != 0 )  || ( xDelta/SCROLL_AMT != 0 ) )
 						{//if any clicks need to be made...
 							
 							//send the number of whole clicks....
-							CGPostScrollWheelEvent( 2, yDelta/SCROLL_AMT, -xDelta/SCROLL_AMT ); 
+							CGPostScrollWheelEvent( 2, -yDelta/SCROLL_AMT, -xDelta/SCROLL_AMT ); 
 
 							//remove them from our counter
-							xTmp %=SCROLL_AMT;
-							yTmp %=SCROLL_AMT;
+							xDelta %=SCROLL_AMT;
+							yDelta %=SCROLL_AMT;
 						}
-
-						break;
-					case EVENT_TYPE_MOUSE_MOVE:
-						printf("Mouse move\n");
-						fflush( stdout );
-						CGPoint newloc;
-						Point pt;
-						GetGlobalMouse( &pt );//get cursor pos
-						//update x/y
-						newloc.x = pt.h + pEvent->move_info.dx;
-						newloc.y = pt.v + pEvent->move_info.dy;
-
-						CGPostMouseEvent( newloc, true /*yes move there*/, 0 , false); 
 
 						break;
 					case EVENT_TYPE_MOUSE_DOWN:

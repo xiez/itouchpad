@@ -1,4 +1,4 @@
-#Will Dietz
+#Will Dietz & Brent Jensen
 #macosx server for iTouchpad
 
 APPNAME = itp-server-mac
