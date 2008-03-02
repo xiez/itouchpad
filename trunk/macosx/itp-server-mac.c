@@ -44,7 +44,6 @@
 #include <ApplicationServices/ApplicationServices.h>
 #include <Carbon/Carbon.h>
 
-
 #include "mouseevent.h"
 
 #define SCROLL_AMT 40
@@ -66,7 +65,7 @@ int main( int argc, char ** argv)
 	int port = PORT;
 	int recvsize;
 
-	int button, yDelta = 0, yTmp;
+	int button, xDelta=0, yDelta=0;
 
 //network stuff
 	//configure socket
@@ -114,47 +113,25 @@ int main( int argc, char ** argv)
 				switch( pEvent->event_t )
 				{
 					case EVENT_TYPE_MOUSE_SCROLL_MOVE:
-						//no x-scrolling :-/
-						printf("Scrolling\n");
+						printf( "Scrolling\n" );
 						fflush( stdout );
+						xDelta += pEvent->move_info.dx;
 						yDelta += pEvent->move_info.dy;
-						if ( yDelta < 0 )//down
-						{
-							button = BUTTON_SCROLL_DOWN;
-							yTmp = - yDelta;
-						}
-						else
-						{
-							button = BUTTON_SCROLL_UP;
-							yTmp = yDelta;
-						}
 
-						//this code made a lot more sense in linux, TODO: CLEAN THIS UP
 						//TODO: mac osx has a api to get the exact scroll amount, look into that
-						if ( yTmp/SCROLL_AMT != 0 )
+						if ( ( yTmp/SCROLL_AMT != 0 )  || ( xDelta/SCROLL_AMT != 0 ) )
 						{//if any clicks need to be made...
 							
 							//send the number of whole clicks....
-							CGPostScrollWheelEvent( 1, yTmp/SCROLL_AMT ); 
+							CGPostScrollWheelEvent( 2, yDelta/SCROLL_AMT, -xDelta/SCROLL_AMT ); 
 
 							//remove them from our counter
+							xTmp %=SCROLL_AMT;
 							yTmp %=SCROLL_AMT;
-						}
-
-
-						//fix yTmp:
-						if ( yDelta < 0 )//we were scrolling down
-						{
-							yDelta = -yTmp;
-						}
-						else
-						{
-							yDelta = yTmp;
 						}
 
 						break;
 					case EVENT_TYPE_MOUSE_MOVE:
-						//test'
 						printf("Mouse move\n");
 						fflush( stdout );
 						CGPoint newloc;
