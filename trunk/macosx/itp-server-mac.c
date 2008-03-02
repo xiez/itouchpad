@@ -41,6 +41,10 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
+#include <ApplicationServices/ApplicationServices.h>
+#include <Carbon/Carbon.h>
+
+
 #include "mouseevent.h"
 
 #define SCROLL_AMT 40
@@ -109,19 +113,10 @@ int main( int argc, char ** argv)
 
 				switch( pEvent->event_t )
 				{
-					case EVENT_TYPE_MOUSE_MOVE:
-						Point pt;
-						CGPoint newloc;
-						GetGlobalMouse( &pt );//get cursor pos
-						//update x/y
-						newloc.x = pt.h + pEvent->move_info.dx;
-						newloc.y = pt.v + pEvent->move_info.dy;
-
-						CGPostMouseEvent( newloc, true /*yes move there*/, 0 ); 
-
-						break;
 					case EVENT_TYPE_MOUSE_SCROLL_MOVE:
 						//no x-scrolling :-/
+						printf("Scrolling\n");
+						fflush( stdout );
 						yDelta += pEvent->move_info.dy;
 						if ( yDelta < 0 )//down
 						{
@@ -158,7 +153,20 @@ int main( int argc, char ** argv)
 						}
 
 						break;
+					case EVENT_TYPE_MOUSE_MOVE:
+						//test'
+						printf("Mouse move\n");
+						fflush( stdout );
+						CGPoint newloc;
+						Point pt;
+						GetGlobalMouse( &pt );//get cursor pos
+						//update x/y
+						newloc.x = pt.h + pEvent->move_info.dx;
+						newloc.y = pt.v + pEvent->move_info.dy;
 
+						CGPostMouseEvent( newloc, true /*yes move there*/, 0 , false); 
+
+						break;
 					case EVENT_TYPE_MOUSE_DOWN:
 						//printf( "mouse down: %d", pEvent->button_info.button );
 						//TODO: MOUSE DOWN!
@@ -174,6 +182,7 @@ int main( int argc, char ** argv)
 
 					default:
 						fprintf( stderr, "unknown message type: %d\n", pEvent->event_t );
+						fflush( stdout );
 						break;
 				}
 
