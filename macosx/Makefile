@@ -7,10 +7,10 @@ CC=gcc
 LD=$(CC)
 INCLUDES= -I../common
 CFLAGS= -g -O2 -Wall -Werror $(INCLUDES)
-
+LDFLAGS=-lm -lobjc -ObjC -framework CoreFoundation -framework Foundation -framework ApplicationServices -framework Carbon
 
 OBJS = \
-	   itp-server-mac.o
+	   itp-server-mac.o \
 
 
 all:   $(APPNAME) 
@@ -30,4 +30,5 @@ depend:
 clean:
 	-$(RM) -f $(APPNAME) *.o
 
+itp-server-mac.o: ../common/mouseevent.h
 # DO NOT DELETE
