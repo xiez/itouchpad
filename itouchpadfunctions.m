@@ -32,12 +32,17 @@
 
 #import "itouchpadfunctions.h"
 #import "NetworkController.h"
-#import "mouseevent.h"
 #import "mconnection.h"
 #import "consts.h"
 #import "PrefsView.h"
 
 
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  init
+ *  Description:  Initializes variables used in this code--and loads settings
+ * =====================================================================================
+ */
 void init()
 {
 	NSMutableDictionary * defs = [[ NSMutableDictionary alloc ] init ];
@@ -48,10 +53,20 @@ void init()
 	[ [ PrefsView sharedInstance ] loadSettings ];
 }
 
+
+/*-----------------------------------------------------------------------------
+ *  Local variables representing our connection and its state
+ *-----------------------------------------------------------------------------*/
 static bool m_hasConnected;
 static MConnection con;
 static pMConnection pCon = &con;
 
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  hasConnected
+ *  Description:  returns true iff a connection is/has been established
+ * =====================================================================================
+ */
 bool hasConnected()
 {
 	return m_hasConnected;
@@ -75,7 +90,6 @@ int getPort()
 	return [ nPort intValue ];
 }
 
-//bool weCreatedNNTPServer = false;
 void setServer( NSString * nsServer )
 {
 	[ [ NSUserDefaults standardUserDefaults ] setObject: nsServer forKey: K_SERVER ];
@@ -87,8 +101,6 @@ void setPort( int newport )
 }
 
 
-
-//dns request
 
 /* 
  * ===  FUNCTION  ======================================================================
@@ -152,6 +164,12 @@ NSString * resolveHostname( const char * hostname )
 	return nil;
 }
 
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  init_server
+ *  Description:  Attempts to connect to the server and port stored in settings.  Returns 1 iff successful.
+ * =====================================================================================
+ */
 int init_server()
 {
 	NSString * serverip;
@@ -186,13 +204,15 @@ int init_server()
 	return true;//it worked!!! \o/
 }
 
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  sendMouseMove
+ *  Description:  Helper function that sends a mouse move delta input event.
+ * =====================================================================================
+ */
 void sendMouseMove( int dx, int dy )
 {
-//	if ( dx == 0 && dy == 0 )
-//	{
-//		fprintf( stderr, "Discarding worthless zero-delta move message!\n" );
-//	}
-	MouseEvent e;
+	InputEvent e;
 	e.event_t = EVENT_TYPE_MOUSE_MOVE;
 	e.move_info.dx = dx * MOUSE_SPEED;
 	e.move_info.dy = dy * MOUSE_SPEED;
@@ -203,9 +223,15 @@ void sendMouseMove( int dx, int dy )
 
 }
 
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  sendMouseScroll
+ *  Description:  Helper function that sends a scroll delta input event.
+ * =====================================================================================
+ */
 void sendMouseScroll( int dx, int dy )
 {
-	MouseEvent e;
+	InputEvent e;
 	e.event_t = EVENT_TYPE_MOUSE_SCROLL_MOVE;
 	e.move_info.dx = dx * MOUSE_SPEED;
 	e.move_info.dy = dy * MOUSE_SPEED;
@@ -214,11 +240,17 @@ void sendMouseScroll( int dx, int dy )
 
 }
 
-void sendButtonPress( bool down )
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  sendButtonPress
+ *  Description:  sends a mouse event for the specified button, either up for down according to 'press'.
+ * =====================================================================================
+ */
+void sendButtonPress( int button, bool down )
 {
-	MouseEvent e;
+	InputEvent e;
 	e.event_t = down? EVENT_TYPE_MOUSE_DOWN : EVENT_TYPE_MOUSE_UP;
-	e.button_info.button = BUTTON_LEFT;//only button we're using for now
+	e.button_info.button = button;
 
 	sendEvent( pCon, &e );
 

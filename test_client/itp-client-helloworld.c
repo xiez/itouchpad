@@ -1,12 +1,12 @@
 /*
  * =====================================================================================
  *
- *       Filename:  itp-client-drag.c
+ *       Filename:  itp-client-helloworld.c
  *
  *    Description:  Sample itp client for testing the servers
  *
  *        Version:  1.0
- *        Created:  02/19/2008 01:02:21 PM
+ *        Created:  03/04/2008 09:13:44 PM
  *
  *         Author:  Will Dietz (WD), wdietz2@uiuc.edu
  *        Company:  dtzTech
@@ -45,6 +45,7 @@ int main( int argc, char ** argv )
 {
 
 	int counter;
+	char * msg = "hello world";
 
 	InputEvent event;
 	pInputEvent pEvent = &event;
@@ -58,34 +59,19 @@ int main( int argc, char ** argv )
 		return -1;
 	}
 
-	event.event_t = EVENT_TYPE_MOUSE_DOWN;
-	event.button_info.button = BUTTON_LEFT;
-	sendEvent( &con, pEvent );
-
-	sleep( 1 );
-
-	//move down and to the right 100
-	event.event_t = EVENT_TYPE_MOUSE_MOVE;
-	event.move_info.dx = 1;
-	event.move_info.dy = 1;
-
-	for( counter = 0; counter < 100; counter++ )
+	//send each character in the message
+	for( counter = 0; counter < strlen( msg ); counter++ )
 	{
-		if( sendEvent( &con, pEvent ) < 0 )
-		{
-			printf( "error!" );
-		}
+		event.event_t = EVENT_TYPE_KEY_DOWN;
+		event.key_info.keycode = (int)msg[counter];
+		sendEvent( &con, pEvent );
+		
+		event.event_t = EVENT_TYPE_KEY_UP;
+		sendEvent( &con, pEvent );
+
 	}
 
-	sleep( 1 );
-
-	event.event_t = EVENT_TYPE_MOUSE_UP;
-	event.button_info.button = BUTTON_LEFT;
-	sendEvent( &con, pEvent );
-
-
 	close_connection( pCon );
-
 
 	return 0;
 

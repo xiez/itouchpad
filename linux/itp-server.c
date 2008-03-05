@@ -44,7 +44,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
-#include "mouseevent.h"
+#include "inputevent.h"
 
 #define SCROLL_AMT 40
 #define BUTTON_SCROLL_UP 5
@@ -53,10 +53,16 @@
 
 typedef int SOCKET;
 
+
+/*-----------------------------------------------------------------------------
+ *  Local method declarations
+ *-----------------------------------------------------------------------------*/
+void handleKeyEvent( Display * dpy, pInputEvent pEvent );
+
 int main( int argc, char ** argv)
 {
-	MouseEvent event;
-	pMouseEvent pEvent = &event;
+	InputEvent event;
+	pInputEvent pEvent = &event;
 
 	Display	*dpy; /* X server connection */
 	int xtest_major_version = 0;
@@ -129,8 +135,8 @@ int main( int argc, char ** argv)
 
 		while( 1 )
 		{
-			recvsize = recv( s_accept, pEvent, sizeof( MouseEvent ), MSG_WAITALL );
-			if ( recvsize == sizeof( MouseEvent ) )//got data
+			recvsize = recv( s_accept, pEvent, sizeof( InputEvent ), MSG_WAITALL );
+			if ( recvsize == sizeof( InputEvent ) )//got data
 			{
 
 				switch( pEvent->event_t )
@@ -182,6 +188,11 @@ int main( int argc, char ** argv)
 						XTestFakeButtonEvent( dpy, pEvent->button_info.button, 0, 0 );
 						break;
 
+					case EVENT_TYPE_KEY_UP:	
+					case EVENT_TYPE_KEY_DOWN:
+						handleKeyEvent( dpy, pEvent );
+						break;
+
 					default:
 						fprintf( stderr, "unknown message type: %d\n", pEvent->event_t );
 						break;
@@ -213,3 +224,9 @@ int main( int argc, char ** argv)
 	return 0;
 }
 
+void handleKeyEvent( Display * dpy, pInputEvent pEvent )
+{
+	//TODO: do something with the modifier field!!
+	XTestFakeKeyEvent( dpy, XKeysymToKeycode( dpy, pEvent->key_info.keycode ), pEvent->event_t == EVENT_TYPE_KEY_DOWN, 0 ); 
+
+}

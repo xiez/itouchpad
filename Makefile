@@ -51,9 +51,9 @@ clean: local_clean
 local_clean:
 	rm -f *.o common/*.o $(APPNAME)
 install: $(APPNAME) 
-	scp $(APPNAME) root@192.168.255.2:
-#	scp $(APPNAME) root@10.5.16.180: 
-#	scp $(APPNAME) root@172.16.1.34:
+	scp $(APPNAME) mobile@192.168.255.2:
+#	scp $(APPNAME) mobile@10.5.16.180: 
+#	scp $(APPNAME) mobile@172.16.1.34:
 # I have 3 wireless networks.. don't ask.
 
 common/mconnection.o: common

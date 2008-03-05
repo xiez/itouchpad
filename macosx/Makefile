@@ -31,5 +31,5 @@ depend:
 clean:
 	-$(RM) -f $(APPNAME) *.o
 
-itp-server-mac.o: ../common/mouseevent.h
+itp-server-mac.o: ../common/inputevent.h
 # DO NOT DELETE

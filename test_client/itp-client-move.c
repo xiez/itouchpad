@@ -1,7 +1,7 @@
 /*
  * =====================================================================================
  *
- *       Filename:  itp-client.c
+ *       Filename:  itp-client-move.c
  *
  *    Description:  Sample itp client for testing the servers
  *
@@ -33,7 +33,7 @@
 */
 
 
-#include "mouseevent.h"
+#include "inputevent.h"
 #include "mconnection.c"
 
 #include <stdio.h> //perror
@@ -46,8 +46,8 @@ int main( int argc, char ** argv )
 
 	int counter;
 
-	MouseEvent event;
-	pMouseEvent pEvent = &event;
+	InputEvent event;
+	pInputEvent pEvent = &event;
 
 
 	MConnection con;

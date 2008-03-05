@@ -126,8 +126,8 @@
 		case STATE_MOUSE_DOWN:
 			NSLog( @"click!" );
 			//since user didn't drag, we simulate full click
-			sendButtonPress( true );
-			sendButtonPress( false );
+			sendButtonPress( BUTTON_LEFT, true );
+			sendButtonPress( BUTTON_LEFT, false );
 			_curState = STATE_NONE;
 			break;
 		case STATE_MOUSE_DOWN_CHORDING:
@@ -135,12 +135,13 @@
 			{
 				NSLog( @"drag!" );
 			}
-			sendButtonPress( true );
+			sendButtonPress( BUTTON_LEFT, true );
 			break;
 
 		case STATE_MOUSE_DOWN_CHORDING_MOVE: //end of scroll	
 		case STATE_MOUSE_DOWN_MOVE: //end of normal move, or drag
-			sendButtonPress( false );//can't hurt....?
+		   //FIXME: only send mouseup when appopropriate!!
+			sendButtonPress( BUTTON_LEFT, false );
 			_curState = STATE_NONE;
 		default:
 			break;
@@ -174,7 +175,7 @@
 			else
 			{
 				NSLog( @"drag!" );
-				sendButtonPress( true );
+				sendButtonPress( BUTTON_LEFT, true );
 				_curState = STATE_MOUSE_DOWN_MOVE;
 			}
 		case STATE_MOUSE_DOWN_CHORDING_MOVE:	

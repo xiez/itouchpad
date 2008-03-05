@@ -1,11 +1,16 @@
 #Will Dietz
 #sample client for testing the servers
 
+NULL=
 
 DRAG = itp-client-drag
 MOVE = itp-client-move
+HELLO = itp-client-helloworld
 
-APPS = $(DRAG) $(DRAG)-arm $(MOVE) $(MOVE)-arm
+APPS = $(DRAG) $(DRAG)-arm \
+	   $(MOVE) $(MOVE)-arm \
+	   $(HELLO) $(HELLO)-arm \
+	   $(NULL)
 
 ARMCC=arm-apple-darwin-gcc
 ARMLD=$(ARMCC)
@@ -28,6 +33,11 @@ $(DRAG)-arm: $(DRAG).armo
 $(MOVE): $(MOVE).o 
 	$(LD) $(LDFLAGS) -o $@ $^  
 $(MOVE)-arm: $(MOVE).armo 
+	$(ARMLD) $(ARMLDFLAGS) -o $@ $^
+
+$(HELLO): $(HELLO).o 
+	$(LD) $(LDFLAGS) -o $@ $^  
+$(HELLO)-arm: $(HELLO).armo 
 	$(ARMLD) $(ARMLDFLAGS) -o $@ $^
 
 

@@ -44,7 +44,7 @@
 
 #define CONNECT_TIMEOUT 5
 
-#define USE_NAGLE_DELAY 1
+#define USE_NAGLE_DELAY 0
 
 /* 
  * ===  FUNCTION  ======================================================================
@@ -176,15 +176,15 @@ int init_connection( pMConnection pCon, const char * serverip, int port )
  *  Description:  sends the specified event using the specified connection.  Blocking.
  * =====================================================================================
  */
-int sendEvent( pMConnection pCon, pMouseEvent pEvent )
+int sendEvent( pMConnection pCon, pInputEvent pEvent )
 {
 	/* TODO:
 	 * Instead of sending all the deltas as they occur, just add the delta to a running total, and
 	 * send that delta on a timer/select.  This way you don't end up spamming the network with
 	 * packets to achieve a granularity that isn't necessary.
-	 * Should make the experience smoother
+	 * Might make the experience smoother, worth investigating.
 	 */
-	size_t size = sizeof( MouseEvent );
+	size_t size = sizeof( InputEvent );
 
 	if ( send( pCon->sockd, pEvent, size, 0 ) != size )
 	{
