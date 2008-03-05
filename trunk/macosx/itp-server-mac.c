@@ -49,14 +49,23 @@
 #define SCROLL_AMT 10
 #define BUTTON_SCROLL_UP 5
 #define BUTTON_SCROLL_DOWN 4
+#define debug true
 
 
 typedef int SOCKET;
 
+
+
 int main( int argc, char ** argv)
 {
+	CGSize mainScreenSize = CGDisplayScreenSize (CGMainDisplayID ());
+	CGDirectDisplayID currentDisplayID = CGMainDisplayID ();
+	CGSize currentDisplaySize = mainScreenSize;
+	CGRect displayRect;
 	CGPoint newloc;
 	Point pt;
+	CGEventRef eventRef;
+	
 	MouseEvent event;
 	pMouseEvent pEvent = &event;
 
@@ -115,19 +124,69 @@ int main( int argc, char ** argv)
 				switch( pEvent->event_t )
 				{
 					case EVENT_TYPE_MOUSE_MOVE:
-						printf("Mouse move\n");
-						fflush( stdout );
+						if(debug) printf("Mouse move\n");
 						GetGlobalMouse( &pt );//get cursor pos
 						//update x/y
-						newloc.x = pt.h + pEvent->move_info.dx;
-						newloc.y = pt.v + pEvent->move_info.dy;
-
-						CGPostMouseEvent( newloc, true /*yes move there*/, 0 , false); 
-
+						
+						newloc.x = pt.h + pEvent->move_info.dx * 2;
+						newloc.y = pt.v + pEvent->move_info.dy * 2;
+						
+						CGDisplayCount displayCount = 0;
+						//check if we've crossed outside the x bounds
+						
+						CGDirectDisplayID tempDisplayID;
+						
+						CGGetDisplaysWithPoint (
+							newloc,
+							1,
+							&tempDisplayID,
+							&displayCount);
+							
+						
+						if (displayCount != 0) {
+							currentDisplayID = tempDisplayID;
+						}
+						
+						displayRect = CGDisplayBounds(currentDisplayID);
+						
+						if (newloc.x < displayRect.origin.x) {
+							newloc.x = displayRect.origin.x;
+						}
+						else if (newloc.x > displayRect.origin.x +
+								 displayRect.size.width - 1) {
+							newloc.x = displayRect.origin.x + displayRect.size.width - 1;
+						}
+						if (newloc.y < displayRect.origin.y) {
+							newloc.y = displayRect.origin.y;
+						}
+						else if (newloc.y > displayRect.origin.y +
+								 displayRect.size.height - 1) {
+							newloc.y = displayRect.origin.y + displayRect.size.height - 1;
+						}
+												
+						if(debug) 
+						{
+							printf("Current mouse location: {%d,%d}\n", pt.h, pt.v);
+							printf("newloc: {%f,%f}\n", newloc.x, newloc.y);
+							printf("Screen size: {%f,%f}\n", currentDisplaySize.width, currentDisplaySize.height);
+							fflush( stdout );
+						}
+						//CGPostMouseEvent( newloc, true /*yes move there*/, 0 , false); 
+						
+						eventRef = CGEventCreateMouseEvent(NULL, kCGEventMouseMoved, newloc,
+																   kCGMouseButtonCenter);
+						CGEventSetType(eventRef, kCGEventMouseMoved); // Apple bug... need to set the type manually
+											
+						CGEventPost(kCGSessionEventTap, eventRef);
+						CFRelease(eventRef);
 						break;
 					case EVENT_TYPE_MOUSE_SCROLL_MOVE:
-						printf( "Scrolling\n" );
-						fflush( stdout );
+						if(debug) 
+						{
+							printf( "Scrolling\n" );
+							fflush( stdout );
+						}
+						
 						xDelta += pEvent->move_info.dx;
 						yDelta += pEvent->move_info.dy;
 
@@ -145,16 +204,53 @@ int main( int argc, char ** argv)
 
 						break;
 					case EVENT_TYPE_MOUSE_DOWN:
-						//printf( "mouse down: %d", pEvent->button_info.button );
-						//TODO: MOUSE DOWN!
-
-
+						if(debug) printf("Mouse down\n");
+						GetGlobalMouse( &pt );//get cursor pos
+						//update x/y
+						
+						
+						
+						if(debug) 
+						{
+							printf("Current mouse location: {%d,%d}", pt.h, pt.v);
+							fflush( stdout );
+						}
+						//CGPostMouseEvent( newloc, true /*yes move there*/, 0 , false); 
+						
+						newloc.x = pt.h;
+						newloc.y = pt.v;
+						
+						eventRef = CGEventCreateMouseEvent(NULL, kCGEventLeftMouseDown , newloc,
+																   kCGMouseButtonCenter);
+						CGEventSetType(eventRef, kCGEventLeftMouseDown); // Apple bug... need to set the type manually
+											
+						CGEventPost(kCGSessionEventTap, eventRef);
+						CFRelease(eventRef);
 						break;
 
 					case EVENT_TYPE_MOUSE_UP:	
-						//printf( "mouse up: %d", pEvent->button_info.button );
-						//TODO: MOUSE UP!
-
+						if(debug) printf("Mouse up\n");
+						GetGlobalMouse( &pt );//get cursor pos
+						//update x/y
+						
+						
+						
+						if(debug) 
+						{
+							printf("Current mouse location: {%d,%d}", pt.h, pt.v);
+							fflush( stdout );
+						}
+						//CGPostMouseEvent( newloc, true /*yes move there*/, 0 , false); 
+						
+						newloc.x = pt.h;
+						newloc.y = pt.v;
+						
+						eventRef = CGEventCreateMouseEvent(NULL, kCGEventLeftMouseUp , newloc,
+																   kCGMouseButtonCenter);
+						CGEventSetType(eventRef, kCGEventLeftMouseUp); // Apple bug... need to set the type manually
+											
+						CGEventPost(kCGSessionEventTap, eventRef);
+						CFRelease(eventRef);
 						break;
 
 					default:
