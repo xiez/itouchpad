@@ -40,7 +40,7 @@
 #include <netinet/in.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include "mouseevent.h"
+#include "inputevent.h"
 
 typedef struct
 {
@@ -67,7 +67,7 @@ int init_connection( pMConnection pCon, const char * serverip, int port );
  *  Description:  sends the specified event using the specified connection.  Blocking.
  * =====================================================================================
  */
-int sendEvent( pMConnection pCon, pMouseEvent pEvent );
+int sendEvent( pMConnection pCon, pInputEvent pEvent );
 
 
 /* 

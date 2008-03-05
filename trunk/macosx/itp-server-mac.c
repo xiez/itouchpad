@@ -44,7 +44,7 @@
 #include <ApplicationServices/ApplicationServices.h>
 #include <Carbon/Carbon.h>
 
-#include "mouseevent.h"
+#include "inputevent.h"
 
 #define SCROLL_AMT 10
 #define BUTTON_SCROLL_UP 5
@@ -66,8 +66,8 @@ int main( int argc, char ** argv)
 	Point pt;
 	CGEventRef eventRef;
 	
-	MouseEvent event;
-	pMouseEvent pEvent = &event;
+	InputEvent event;
+	pInputEvent pEvent = &event;
 
 	SOCKET s, s_accept;
 	struct sockaddr_in s_add; //from anyone!
@@ -117,8 +117,8 @@ int main( int argc, char ** argv)
 
 		while( 1 )
 		{
-			recvsize = recv( s_accept, pEvent, sizeof( MouseEvent ), MSG_WAITALL );
-			if ( recvsize == sizeof( MouseEvent ) )//got data
+			recvsize = recv( s_accept, pEvent, sizeof( InputEvent ), MSG_WAITALL );
+			if ( recvsize == sizeof( InputEvent ) )//got data
 			{
 
 				switch( pEvent->event_t )
@@ -180,6 +180,7 @@ int main( int argc, char ** argv)
 						CGEventPost(kCGSessionEventTap, eventRef);
 						CFRelease(eventRef);
 						break;
+
 					case EVENT_TYPE_MOUSE_SCROLL_MOVE:
 						if(debug) 
 						{
@@ -251,6 +252,41 @@ int main( int argc, char ** argv)
 											
 						CGEventPost(kCGSessionEventTap, eventRef);
 						CFRelease(eventRef);
+						break;
+
+					/* TODO:
+					 * so far this will only work for basic keycodes, and will probably fail on anything non-ascii,
+					 * and that has yet to be tested, etc.  Right now I'm mostly interested in having the events properly
+					 * generated and support ascii keys.  We will handle the rest later.
+					 */
+					case EVENT_TYPE_KEY_DOWN:
+						if ( debug )
+						{
+							printf( "Key down: %c\n", pEvent->key_info.keycode );
+							fflush( stdout );
+						}
+
+						eventRef = CGEventCreateMouseEvent( NULL, (CGKeyCode)( pEvent->key_info.keycode - 1 ), true );
+
+						CGEventSetType( eventRef, kCGEventKeyDown );
+
+						CGEventPost( kCGSessionEventTap, eventRef );
+						CFRelease( eventRef );
+						break;
+
+					case EVENT_TYPE_KEY_UP:
+						if ( debug )
+						{
+							printf( "Key Up: %c\n", pEvent->key_info.keycode );
+							fflush( stdout );
+						}
+
+						eventRef = CGEventCreateMouseEvent( NULL, (CGKeyCode)( pEvent->key_info.keycode - 1 ), false );
+
+						CGEventSetType( eventRef, kCGEventKeyUp );
+
+						CGEventPost( kCGSessionEventTap, eventRef );
+						CFRelease( eventRef );
 						break;
 
 					default:

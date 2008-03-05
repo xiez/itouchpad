@@ -20,34 +20,72 @@
 */
 
 #import "consts.h"
+#import "inputevent.h"
 
 //Handles the network stuff, and settings management
 
 
-//methods:
-
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  init
+ *  Description:  Initializes variables used in this code--and loads settings
+ * =====================================================================================
+ */
 void init();
 
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  hasConnected
+ *  Description:  returns true iff a connection is/has been established
+ * =====================================================================================
+ */
 bool hasConnected();
 
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  init_server
+ *  Description:  Attempts to connect to the server and port stored in settings.  Returns 1 iff successful.
+ * =====================================================================================
+ */
 int init_server();
 
-//Settings stuff:
 
+
+/*-----------------------------------------------------------------------------
+ *  Settings stuff
+ *-----------------------------------------------------------------------------*/
 NSString * getServer();
-
 int	getPort();
 
-
 void setServer( NSString * server );
-
 void setPort( int port );
 
-//event messaging stuff:
 
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  sendMouseMove
+ *  Description:  Helper function that sends a mouse move delta input event.
+ * =====================================================================================
+ */
 void sendMouseMove( int dx, int dy ); 
 
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  sendMouseScroll
+ *  Description:  Helper function that sends a scroll delta input event.
+ * =====================================================================================
+ */
 void sendMouseScroll( int dx, int dy );
 
-void sendButtonPress( bool down );
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  sendButtonPress
+ *  Description:  sends a mouse event for the specified button, either up for down according to 'press'.
+ * =====================================================================================
+ */
+void sendButtonPress( int b, bool down );
 

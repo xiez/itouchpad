@@ -39,7 +39,7 @@
 #include <sys/types.h>
 #include <winsock.h>
 
-#include "../../../common/mouseevent.h"
+#include "../../../common/inputevent.h"
 
 #define USE_ACCEL 1
 
@@ -52,8 +52,8 @@
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	MouseEvent event;
-	pMouseEvent pEvent = &event;
+	InputEvent event;
+	pInputEvent pEvent = &event;
 	//POINT pt;
 	
 	SOCKET s, s_accept;
