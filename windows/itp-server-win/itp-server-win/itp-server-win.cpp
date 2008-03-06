@@ -38,10 +38,10 @@
 #include <string.h>
 #include <sys/types.h>
 #include <winsock.h>
-#include <process.h>
-#include <queue>
 
 #include "../../../common/inputevent.h"
+
+#define USE_ACCEL 1
 
 //dang windows lack of compliance
 #ifndef MSG_WAITALL
@@ -50,81 +50,11 @@
 #define MSG_WAITALL 0
 #endif
 
-//foredeclarations
-void socketListen( void * pParam );
-void handleEvent( pInputEvent pEvent );
-void combineMoveEvents();
-
-//cs for updates...locks the update queue
-CRITICAL_SECTION cs_q;
-//signals that an update has been made
-HANDLE update_event;
-
-std::queue<InputEvent> q_events;
-
 int _tmain(int argc, _TCHAR* argv[])
 {
-	update_event = CreateEvent( NULL, FALSE, FALSE, TEXT("UpdateEvent") );
-
-	::InitializeCriticalSection( &cs_q );
-	::_beginthread( socketListen, 0, NULL );
-
-	while( 1 )
-	{
-		//wait for an event to enter the queue to be processed
-		::WaitForSingleObject( update_event, INFINITE ); 
-
-		//process all events in the queue
-		::EnterCriticalSection( &cs_q );
-		combineMoveEvents();
-		while( q_events.size() != 0 )
-		{
-			InputEvent ev = q_events.front();
-			q_events.pop();
-
-			handleEvent( &ev );
-
-		}
-		::LeaveCriticalSection( &cs_q );
-
-		/*
-		 * The following code doesn't seem to do
-		 * what I expected it to.
-		 * The problem is that the events seem to be grouped
-		 * together, or otherwise not processed at all
-		 * when expected.
-		 * Something like flushMouseEvents() would be wonderful.
-		 */
-
-		//force the event to be processed.. we wait until it's done.
-		MSG msg;
-		while( ::PeekMessage( &msg, NULL, 0, 0, PM_NOREMOVE ) )
-		{
-			if( ::GetMessage( &msg, NULL, 0, 0 ) )
-			{
-				::TranslateMessage( &msg );
-				::DispatchMessage( &msg );
-			}
-			else
-			{
-				break;
-			}
-		}
-
-		//guarantee that 20ms are between bursts of events.. hopefully this helps!!!!
-		Sleep( 0 );
-
-	}
-	
-	return 0;
-	
-
-}
-
-void socketListen( void * pParam )
-{
-	InputEvent ev;
-	pInputEvent pEvent = &ev;
+	InputEvent event;
+	pInputEvent pEvent = &event;
+	//POINT pt;
 	
 	SOCKET s, s_accept;
 	struct sockaddr_in s_add; //from anyone!
@@ -133,7 +63,12 @@ void socketListen( void * pParam )
 	int port = PORT;
 	int recvsize;
 
-	//network stuff
+	//mouse-relative move:
+	int oldSpeed[4];
+	bool accelChanged;
+
+
+//network stuff
 	//WSA \o/
 	WSADATA WsaDat;
 	if (WSAStartup(MAKEWORD(1, 1), &WsaDat) != 0)
@@ -174,7 +109,7 @@ void socketListen( void * pParam )
 		if ( s_accept == -1 )
 		{
 			perror( "failed to accept!" );
-			return exit( 4 );
+			return -1;
 		}
 
 		while( 1 )
@@ -182,14 +117,63 @@ void socketListen( void * pParam )
 			recvsize = recv( s_accept, (char *)pEvent, sizeof( InputEvent ), MSG_WAITALL );
 			if ( recvsize == sizeof( InputEvent ) )//got data
 			{
-				
-				::EnterCriticalSection( &cs_q );
-				q_events.push( *pEvent );
-				::LeaveCriticalSection( &cs_q );
-				//signal other thread that an update has occurred
-				::SetEvent( update_event );
-				
-				
+				switch( pEvent->event_t )
+				{
+					case EVENT_TYPE_MOUSE_MOVE:
+//						GetCursorPos( &pt );
+//						SetCursorPos( pt.x + pEvent->move_info.dx, pt.y + pEvent->move_info.dy );
+						//the mouse-accel related code is from synergy, ty
+						// save mouse speed & acceleration
+						#ifdef USE_ACCEL
+						oldSpeed[4];
+						accelChanged =
+									SystemParametersInfo(SPI_GETMOUSE,0, oldSpeed, 0) &&
+									SystemParametersInfo(SPI_GETMOUSESPEED, 0, oldSpeed + 3, 0);
+					
+						// use 1:1 motion
+						if (accelChanged) {
+							int newSpeed[4] = { 0, 0, 0, 1 };
+							accelChanged =
+									SystemParametersInfo(SPI_SETMOUSE, 0, newSpeed, 0) ||
+									SystemParametersInfo(SPI_SETMOUSESPEED, 0, newSpeed + 3, 0);
+						}
+					
+						// move relative to mouse position
+						mouse_event(MOUSEEVENTF_MOVE, pEvent->move_info.dx, pEvent->move_info.dy, 0, 0);
+					
+						// restore mouse speed & acceleration
+						if (accelChanged) {
+							SystemParametersInfo(SPI_SETMOUSE, 0, oldSpeed, 0);
+							SystemParametersInfo(SPI_SETMOUSESPEED, 0, oldSpeed + 3, 0);
+						}
+						#else
+							mouse_event( MOUSEEVENTF_MOVE, pEvent->move_info.dx, pEvent->move_info.dy, 0, 0 );
+						#endif
+
+						break;
+					case EVENT_TYPE_MOUSE_SCROLL_MOVE:
+						mouse_event( MOUSEEVENTF_WHEEL, 0, 0, -pEvent->move_info.dy, 0 );
+						//HWHEEL doesn't seem to work?
+						mouse_event( MOUSEEVENTF_HWHEEL, 0, 0, pEvent->move_info.dx, 0 );
+
+						break;
+					
+						//NOTE: this assumes the mouse events are lbutton. fine for now, but needs to change!
+					case EVENT_TYPE_MOUSE_DOWN:
+						mouse_event( MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0 );
+						break;
+
+					case EVENT_TYPE_MOUSE_UP:	
+						mouse_event( MOUSEEVENTF_LEFTUP, 0, 0, 0, 0 );
+						break;
+
+					default:
+						fprintf( stderr, "unknown message type: %d\n", pEvent->event_t );
+						break;
+				}
+
+				//XFlush( dpy );
+			
 			}
 			else if ( recvsize > 0 )
 			{
@@ -211,101 +195,6 @@ void socketListen( void * pParam )
 
 	//shouldn't get here!
 
-}
-
-
-//#define DONT_USE_ACCEL
-void handleEvent( pInputEvent pEvent )
-{
-#ifdef DONT_USE_ACCEL
-	bool accelChanged;
-#endif
-	SYSTEMTIME time;
-	::GetSystemTime( &time );
-	
-
-	switch( pEvent->event_t )
-	{
-		case EVENT_TYPE_MOUSE_MOVE:
-			fprintf( stderr, "%2d:%02d:%02d.%04d :: mouse move!\n", time.wHour, time.wMinute, time.wSecond, time.wMilliseconds );
-			fflush( stderr );
-			POINT pt;
-			::GetCursorPos( &pt );
-			pt.x += pEvent->move_info.dx;
-			pt.y += pEvent->move_info.dy;
-			::SetCursorPos( pt.x, pt.y );
-
-			break;
-		case EVENT_TYPE_MOUSE_SCROLL_MOVE:
-			mouse_event( MOUSEEVENTF_WHEEL, 0, 0, -pEvent->move_info.dy, 0 );
-			//HWHEEL doesn't seem to work?
-			mouse_event( MOUSEEVENTF_HWHEEL, 0, 0, pEvent->move_info.dx, 0 );
-
-			break;
-		
-			//NOTE: this assumes the mouse events are lbutton. fine for now, but needs to change!
-		case EVENT_TYPE_MOUSE_DOWN:
-			mouse_event( MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0 );
-			break;
-
-		case EVENT_TYPE_MOUSE_UP:	
-			mouse_event( MOUSEEVENTF_LEFTUP, 0, 0, 0, 0 );
-			break;
-
-		default:
-			fprintf( stderr, "unknown message type: %d\n", pEvent->event_t );
-			break;
-	}
-
-}
-
-//assumes already in cs over the queue
-void combineMoveEvents()
-{
-	//here we make a pass through pending events
-	//and combine all the mouse moves
-	//this way, we only send one move/timeinterval
-	//idea is that this would reduce lag in windows server
-	InputEvent e;
-	e.event_t = EVENT_TYPE_MOUSE_MOVE;
-	e.move_info.dx = 0;
-	e.move_info.dy = 0;
-
-	bool hasMouseMove = false;
-	bool didSomething = false;
-
-	std::queue<InputEvent> q_copy;
-	while( q_events.size() != 0 )
-	{
-		InputEvent cur_ev = q_events.front();
-		q_events.pop();
-
-		if ( cur_ev.event_t == EVENT_TYPE_MOUSE_MOVE )
-		{
-			if (hasMouseMove) didSomething = true;
-			hasMouseMove = true;
-			e.move_info.dx += cur_ev.move_info.dx;
-			e.move_info.dy += cur_ev.move_info.dy;
-
-		}
-		else
-		{
-			q_copy.push( cur_ev );
-		}
-	}
-
-	if( hasMouseMove )
-	{
-		if ( didSomething )
-		{
-			//DEBUG to see if this method is worthwhile
-		//	fprintf( stdout, "combined! we're doing something!!!" );
-		//	fflush( stdout );
-		}
-		q_copy.push( e );
-	}
-
-	q_events = q_copy;
-
+	return 0;
 }
 
