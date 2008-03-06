@@ -51,4 +51,4 @@ $(HELLO)-arm: $(HELLO).armo
 clean:
 	-$(RM) -f $(APPS) *.o *.armo
 install:
-	scp $(DRAG)-arm $(MOVE)-arm root@192.168.255.2:
+	scp $(DRAG)-arm $(MOVE)-arm $(HELLO)-arm mobile@192.168.255.2:
