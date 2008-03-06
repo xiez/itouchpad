@@ -266,7 +266,7 @@ int main( int argc, char ** argv)
 							fflush( stdout );
 						}
 
-						eventRef = CGEventCreateMouseEvent( NULL, (CGKeyCode)( pEvent->key_info.keycode - 1 ), true );
+						eventRef = CGEventCreateKeyboardEvent( NULL, (CGKeyCode)( pEvent->key_info.keycode - 1 ), true );
 
 						CGEventSetType( eventRef, kCGEventKeyDown );
 
@@ -281,7 +281,7 @@ int main( int argc, char ** argv)
 							fflush( stdout );
 						}
 
-						eventRef = CGEventCreateMouseEvent( NULL, (CGKeyCode)( pEvent->key_info.keycode - 1 ), false );
+						eventRef = CGEventCreateKeyboardEvent( NULL, (CGKeyCode)( pEvent->key_info.keycode - 1 ), false );
 
 						CGEventSetType( eventRef, kCGEventKeyUp );
 
