@@ -38,7 +38,7 @@
 
 #include <stdio.h> //perror
 
-#define HOST "192.168.255.1"
+#define HOST "127.0.0.1"
 #define PORT 5583
 
 int main( int argc, char ** argv )
@@ -70,6 +70,17 @@ int main( int argc, char ** argv )
 		sendEvent( &con, pEvent );
 
 	}
+
+	//send ctrl-shift-esc
+	/*
+	event.event_t = EVENT_TYPE_KEY_DOWN;
+	event.key_info.keycode = kKeyEscape;
+	event.key_info.modifier = kModControl | kModShift;
+	sendEvent( &con, pEvent );
+
+	event.event_t = EVENT_TYPE_KEY_UP;
+	sendEvent( &con, pEvent );
+	*/
 
 	close_connection( pCon );
 
