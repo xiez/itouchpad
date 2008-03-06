@@ -50,6 +50,8 @@
 #define MSG_WAITALL 0
 #endif
 
+void handleKeyEvent( pInputEvent pEvent );
+
 int _tmain(int argc, _TCHAR* argv[])
 {
 	InputEvent event;
@@ -66,7 +68,6 @@ int _tmain(int argc, _TCHAR* argv[])
 	//mouse-relative move:
 	int oldSpeed[4];
 	bool accelChanged;
-
 
 //network stuff
 	//WSA \o/
@@ -160,11 +161,36 @@ int _tmain(int argc, _TCHAR* argv[])
 					
 						//NOTE: this assumes the mouse events are lbutton. fine for now, but needs to change!
 					case EVENT_TYPE_MOUSE_DOWN:
-						mouse_event( MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0 );
+						if ( pEvent->button_info.button == BUTTON_LEFT )
+						{
+							mouse_event( MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0 );
+						}
+						else if ( pEvent->button_info.button == BUTTON_RIGHT )
+						{
+							mouse_event( MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0 );
+						}
+							
 						break;
 
 					case EVENT_TYPE_MOUSE_UP:	
-						mouse_event( MOUSEEVENTF_LEFTUP, 0, 0, 0, 0 );
+						if ( pEvent->button_info.button == BUTTON_LEFT )
+						{
+							mouse_event( MOUSEEVENTF_LEFTUP, 0, 0, 0, 0 );
+						}
+						else if ( pEvent->button_info.button == BUTTON_RIGHT )
+						{
+							mouse_event( MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0 );
+						}
+						break;
+
+					case EVENT_TYPE_KEY_DOWN:
+						handleKeyEvent( pEvent );
+						break;
+
+					case EVENT_TYPE_KEY_UP:
+						printf( "%c", pEvent->key_info.keycode ); 
+						fflush( stdout );
+						handleKeyEvent( pEvent );
 						break;
 
 					default:
@@ -198,3 +224,127 @@ int _tmain(int argc, _TCHAR* argv[])
 	return 0;
 }
 
+void handleKeyEvent( pInputEvent pEvent )
+{
+	unsigned int key = pEvent->key_info.keycode, mod = pEvent->key_info.modifier;
+	short keyscan;
+
+	byte bKey = 0, bMod = 0;
+
+	//convert keycode and modifiers
+	if ( key < 255 ) //if it's an ascii char....
+	{
+		//just get the key event
+		keyscan =::VkKeyScan( (WCHAR)key );
+		bKey = LOBYTE( keyscan );
+		bMod = HIBYTE( keyscan );
+
+		//map bMod to our modifiers
+		/* From MSDN:
+		* Bit	Meaning
+		* 1	Either SHIFT key is pressed.
+		* 2	Either CTRL key is pressed.
+		* 4	Either ALT key is pressed.
+		*/
+		if ( bMod & 1 )
+		{
+			mod |= kModShift;
+		}
+		if ( bMod & ( 1 << 2 ) )
+		{
+			mod |= kModControl;
+		}
+		if ( bMod & ( 1 << 4 ) )
+		{
+			mod |= kModAlt;
+		}
+	}
+	else
+	{
+		//TODO: handle other cases here!
+		bKey = LOBYTE( key );
+
+		switch( key )
+		{
+			case kKeyLeft:
+			case kKeyUp:
+			case kKeyRight:
+			case kKeyDown:
+				bKey = LOBYTE( key ) - VK_LEFT;
+				break;
+			case kKeyBackSpace:
+				bKey = VK_BACK;
+				break;
+			case kKeyTab:
+				bKey = VK_TAB;
+				break;
+			case kKeyReturn:
+				bKey = VK_RETURN;
+				break;
+			case kKeyEscape:
+				bKey = VK_ESCAPE;
+				break;
+			default:
+				//?? :(
+				break;
+		}
+	}
+
+
+	if ( pEvent->event_t == EVENT_TYPE_KEY_DOWN )
+	{
+		/* for now, all modifiers we press/release
+		* all modifiers immediately before/after the keyevent
+		* we only do this for the keydown...
+		* not sure if this is the best way to handle it,
+		* I expect it might break some things.
+		*/
+
+		if( mod )
+		{
+			if ( mod & kModShift )
+			{
+				keybd_event( VK_SHIFT, 0, 0, 0 );
+			}
+			if ( mod & kModControl )
+			{
+				keybd_event( VK_CONTROL, 0, 0, 0 );
+			}
+			if ( mod & kModAlt )
+			{
+				keybd_event( VK_MENU, 0, 0, 0 );
+			}
+			if ( mod & kModFn )
+			{
+				//coolness
+			}
+		}
+
+		keybd_event( bKey, 0, 0, 0 );
+
+		if( mod )
+		{
+			if ( mod & kModShift )
+			{
+				keybd_event( VK_SHIFT, 0, KEYEVENTF_KEYUP, 0 );
+			}
+			if ( mod & kModControl )
+			{
+				keybd_event( VK_CONTROL, 0, KEYEVENTF_KEYUP, 0 );
+			}
+			if ( mod & kModAlt )
+			{
+				keybd_event( VK_MENU, 0, KEYEVENTF_KEYUP, 0 );
+			}
+			if ( mod & kModFn )
+			{
+				//finish the coolness
+			}
+		}
+	}
+	else 
+	{//should be KEY_EVENT_KEY_UP
+		keybd_event( bKey, 0, KEYEVENTF_KEYUP, 0 );
+	}
+
+}
