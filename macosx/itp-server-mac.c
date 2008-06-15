@@ -75,6 +75,7 @@ int main( int argc, char ** argv)
 	socklen_t s_client_size = sizeof( struct sockaddr );
 	int port = PORT;
 	int recvsize;
+	char reuse = 1;//SO_REUSEADDR
 
 	int xDelta=0, yDelta=0;
 
@@ -85,6 +86,11 @@ int main( int argc, char ** argv)
 		perror ( "Failed to create socket :(" ); 
 		exit( 2 );
 
+	}
+
+	if ( setsockopt( s, SOL_SOCKET, SO_REUSEADDR, (char *)&reuse, sizeof( reuse ) ) == -1 )
+	{
+		perror( "Failed to set reuseaddr! Trying to continue..." );
 	}
 
 	memset( &s_add, 0, sizeof( struct sockaddr_in ) );
